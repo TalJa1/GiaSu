@@ -5,12 +5,14 @@ import {
   TouchableOpacity,
   View,
   TextInput,
+  Image,
 } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Colors from '../constants/Colors';
 
 const Login = () => {
   const navigation = useNavigation<any>();
@@ -41,9 +43,12 @@ const Login = () => {
       >
         <View style={styles.headerSection}>
           <View style={styles.logoContainer}>
-            <Icon name="graduation-cap" size={60} color="#2196F3" />
+            <Image 
+              source={require('../assets/GiaSu_Logo.png')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={styles.title}>GiaSu</Text>
           <Text style={styles.subtitle}>
             Smart learning, bright future
           </Text>
@@ -56,13 +61,13 @@ const Login = () => {
             <MaterialIcons
               name="email"
               size={20}
-              color="#666"
+              color={Colors.text.secondary}
               style={styles.inputIcon}
             />
             <TextInput
               style={styles.textInput}
               placeholder="Email"
-              placeholderTextColor="#999"
+              placeholderTextColor={Colors.text.placeholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -74,13 +79,13 @@ const Login = () => {
             <MaterialIcons
               name="lock"
               size={20}
-              color="#666"
+              color={Colors.text.secondary}
               style={styles.inputIcon}
             />
             <TextInput
               style={styles.textInput}
               placeholder="Password"
-              placeholderTextColor="#999"
+              placeholderTextColor={Colors.text.placeholder}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -92,7 +97,7 @@ const Login = () => {
               <MaterialIcons
                 name={showPassword ? 'visibility' : 'visibility-off'}
                 size={20}
-                color="#666"
+                color={Colors.text.secondary}
               />
             </TouchableOpacity>
           </View>
@@ -115,7 +120,7 @@ const Login = () => {
             style={styles.googleButton}
             onPress={handleGoogleLogin}
           >
-            <Icon name="google" size={20} color="#fff" />
+            <Icon name="google" size={20} color={Colors.text.white} />
             <Text style={styles.socialButtonText}>Sign in with Google</Text>
           </TouchableOpacity>
 
@@ -123,7 +128,7 @@ const Login = () => {
             style={styles.facebookButton}
             onPress={handleFacebookLogin}
           >
-            <Icon name="facebook" size={20} color="#fff" />
+            <Icon name="facebook" size={20} color={Colors.text.white} />
             <Text style={styles.socialButtonText}>Sign in with Facebook</Text>
           </TouchableOpacity>
 
@@ -144,7 +149,7 @@ export default Login;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: Colors.background.secondary,
   },
   scrollView: {
     flex: 1,
@@ -162,28 +167,32 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.background.card,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: Colors.ui.shadow,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: Colors.opacity.low,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  logo: {
+    width: 100,
+    height: 100,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#2196F3',
+    color: Colors.primary.main,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: Colors.text.secondary,
     textAlign: 'center',
   },
   formContainer: {
@@ -193,26 +202,28 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.text.primary,
     marginBottom: 30,
     textAlign: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.background.card,
     borderRadius: 12,
     marginBottom: 16,
     paddingHorizontal: 16,
     height: 56,
-    shadowColor: '#000',
+    shadowColor: Colors.ui.shadow,
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: Colors.opacity.low,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.ui.border,
   },
   inputIcon: {
     marginRight: 12,
@@ -220,7 +231,7 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: Colors.text.primary,
     height: '100%',
   },
   eyeIcon: {
@@ -231,28 +242,28 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   forgotPasswordText: {
-    color: '#2196F3',
+    color: Colors.primary.main,
     fontSize: 14,
     fontWeight: '500',
   },
   loginButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: Colors.primary.main,
     borderRadius: 12,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#2196F3',
+    shadowColor: Colors.primary.main,
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.3,
+    shadowOpacity: Colors.opacity.medium,
     shadowRadius: 8,
     elevation: 6,
   },
   loginButtonText: {
-    color: '#fff',
+    color: Colors.text.white,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -264,49 +275,49 @@ const styles = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: Colors.ui.divider,
   },
   dividerText: {
     marginHorizontal: 16,
     fontSize: 14,
-    color: '#666',
+    color: Colors.text.secondary,
   },
   googleButton: {
-    backgroundColor: '#db4437',
+    backgroundColor: Colors.status.error,
     borderRadius: 12,
     height: 52,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#db4437',
+    shadowColor: Colors.status.error,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: Colors.opacity.low,
+    shadowRadius: 6,
+    elevation: 4,
   },
   facebookButton: {
-    backgroundColor: '#3b5998',
+    backgroundColor: Colors.secondary.indigo,
     borderRadius: 12,
     height: 52,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#3b5998',
+    shadowColor: Colors.secondary.indigo,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: Colors.opacity.low,
+    shadowRadius: 6,
+    elevation: 4,
   },
   socialButtonText: {
-    color: '#fff',
+    color: Colors.text.white,
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 12,
@@ -319,11 +330,11 @@ const styles = StyleSheet.create({
   },
   signupText: {
     fontSize: 14,
-    color: '#666',
+    color: Colors.text.secondary,
   },
   signupLink: {
     fontSize: 14,
-    color: '#2196F3',
+    color: Colors.primary.main,
     fontWeight: '600',
   },
 });

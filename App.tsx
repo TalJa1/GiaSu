@@ -1,4 +1,5 @@
 /* eslint-disable react/no-unstable-nested-components */
+/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import { StatusBar, useColorScheme, View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -6,6 +7,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import Colors from './constants/Colors';
 
 // Import your views
 import Login from './views/Login';
@@ -62,11 +64,21 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   return (
     <View style={{
       flexDirection: 'row',
-      backgroundColor: '#1a1a1a',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
+      backgroundColor: Colors.dark.surface,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
       alignItems: 'center',
       justifyContent: 'space-around',
+      borderTopWidth: 1,
+      borderTopColor: Colors.dark.border,
+      shadowColor: Colors.ui.shadow,
+      shadowOffset: {
+        width: 0,
+        height: -2,
+      },
+      shadowOpacity: Colors.opacity.low,
+      shadowRadius: 8,
+      elevation: 8,
     }}>
       {state.routes.map((route: any, index: number) => {
         const { options } = descriptors[route.key];
@@ -93,26 +105,34 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
             testID={options.tabBarTestID}
             onPress={onPress}
             style={{
-              backgroundColor: isFocused ? '#2196F3' : 'transparent',
-              paddingHorizontal: isFocused ? 16 : 8,
-              paddingVertical: 8,
-              borderRadius: 20,
+              backgroundColor: isFocused ? Colors.primary.main : 'transparent',
+              paddingHorizontal: isFocused ? 20 : 12,
+              paddingVertical: 10,
+              borderRadius: 25,
               flexDirection: 'row',
               alignItems: 'center',
-              minWidth: isFocused ? 'auto' : 40,
+              minWidth: isFocused ? 'auto' : 44,
               justifyContent: 'center',
+              shadowColor: isFocused ? Colors.primary.main : 'transparent',
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: isFocused ? Colors.opacity.medium : 0,
+              shadowRadius: 6,
+              elevation: isFocused ? 4 : 0,
             }}
           >
             <TabBarIcon 
               routeName={route.name} 
-              color={isFocused ? '#fff' : '#8E8E93'} 
-              size={20} 
+              color={isFocused ? Colors.text.white : Colors.text.secondary} 
+              size={22} 
             />
             {isFocused && (
               <Text style={{
-                color: '#fff',
-                marginLeft: 8,
-                fontSize: 14,
+                color: Colors.text.white,
+                marginLeft: 10,
+                fontSize: 15,
                 fontWeight: '600',
               }}>
                 {getTabLabel(route.name)}
