@@ -54,6 +54,13 @@ react {
     autolinkLibrariesWithApp()
 }
 
+// React Native Vector Icons configuration
+project.ext.vectoricons = [
+    iconFontNames: [ 'MaterialIcons.ttf', 'EvilIcons.ttf', 'FontAwesome.ttf', 'Foundation.ttf', 'Ionicons.ttf', 'MaterialCommunityIcons.ttf', 'SimpleLineIcons.ttf', 'Octicons.ttf', 'Zocial.ttf', 'Entypo.ttf', 'AntDesign.ttf', 'Feather.ttf' ]
+]
+
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
+
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
