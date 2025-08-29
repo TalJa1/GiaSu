@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
-import { StatusBar, useColorScheme } from 'react-native';
+import { StatusBar, useColorScheme, View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -42,47 +42,102 @@ const TabBarIcon = ({ routeName, color, size }: { routeName: string; color: stri
   return <Icon name={iconName} size={size} color={color} />;
 };
 
+// Custom Tab Bar Component
+const CustomTabBar = ({ state, descriptors, navigation }: any) => {
+  const getTabLabel = (routeName: string) => {
+    switch (routeName) {
+      case 'Home':
+        return 'Home';
+      case 'Study':
+        return 'Study';
+      case 'School':
+        return 'School';
+      case 'Exam':
+        return 'Exam';
+      default:
+        return routeName;
+    }
+  };
+
+  return (
+    <View style={{
+      flexDirection: 'row',
+      backgroundColor: '#1a1a1a',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+      justifyContent: 'space-around',
+    }}>
+      {state.routes.map((route: any, index: number) => {
+        const { options } = descriptors[route.key];
+        const isFocused = state.index === index;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel}
+            testID={options.tabBarTestID}
+            onPress={onPress}
+            style={{
+              backgroundColor: isFocused ? '#2196F3' : 'transparent',
+              paddingHorizontal: isFocused ? 16 : 8,
+              paddingVertical: 8,
+              borderRadius: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              minWidth: isFocused ? 'auto' : 40,
+              justifyContent: 'center',
+            }}
+          >
+            <TabBarIcon 
+              routeName={route.name} 
+              color={isFocused ? '#fff' : '#8E8E93'} 
+              size={20} 
+            />
+            {isFocused && (
+              <Text style={{
+                color: '#fff',
+                marginLeft: 8,
+                fontSize: 14,
+                fontWeight: '600',
+              }}>
+                {getTabLabel(route.name)}
+              </Text>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
+
 // Bottom Tab Navigator Component
 function MainTabNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => (
-          <TabBarIcon routeName={route.name} color={color} size={size} />
-        ),
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: 'gray',
-        tabBarStyle: {
-          backgroundColor: 'white',
-          borderTopWidth: 1,
-          borderTopColor: '#e0e0e0',
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-        headerShown: false, // Hide headers for tab screens since we use SafeAreaView
-      })}
+      tabBar={props => <CustomTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+      }}
     >
-      <Tab.Screen 
-        name="Home" 
-        component={Home} 
-        options={{ tabBarLabel: 'Trang Chủ' }}
-      />
-      <Tab.Screen 
-        name="Study" 
-        component={Study} 
-        options={{ tabBarLabel: 'Học Tập' }}
-      />
-      <Tab.Screen 
-        name="School" 
-        component={School} 
-        options={{ tabBarLabel: 'Trường ĐH' }}
-      />
-      <Tab.Screen 
-        name="Exam" 
-        component={Exam} 
-        options={{ tabBarLabel: 'Kiểm Tra' }}
-      />
+      <Tab.Screen name="Home" component={Home} />
+      <Tab.Screen name="Study" component={Study} />
+      <Tab.Screen name="School" component={School} />
+      <Tab.Screen name="Exam" component={Exam} />
     </Tab.Navigator>
   );
 }
