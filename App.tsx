@@ -1,7 +1,13 @@
 /* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
-import { StatusBar, useColorScheme, View, Text, TouchableOpacity } from 'react-native';
+import {
+  StatusBar,
+  useColorScheme,
+  View,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -15,13 +21,22 @@ import Home from './views/bottomtabs/Home';
 import Study from './views/bottomtabs/Study';
 import School from './views/bottomtabs/School';
 import Exam from './views/bottomtabs/Exam';
+import GiaSuAI from './views/bottomtabs/GiaSuAI';
 
 // Create navigators
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Tab Bar Icon Component
-const TabBarIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
+const TabBarIcon = ({
+  routeName,
+  color,
+  size,
+}: {
+  routeName: string;
+  color: string;
+  size: number;
+}) => {
   let iconName: string;
 
   switch (routeName) {
@@ -36,6 +51,9 @@ const TabBarIcon = ({ routeName, color, size }: { routeName: string; color: stri
       break;
     case 'Exam':
       iconName = 'edit';
+      break;
+    case 'Chat':
+      iconName = 'comments';
       break;
     default:
       iconName = 'home';
@@ -56,30 +74,34 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         return 'School';
       case 'Exam':
         return 'Exam';
+      case 'Chat':
+        return 'Chat';
       default:
         return routeName;
     }
   };
 
   return (
-    <View style={{
-      flexDirection: 'row',
-      backgroundColor: Colors.dark.surface,
-      paddingVertical: 10,
-      paddingHorizontal: 20,
-      alignItems: 'center',
-      justifyContent: 'space-around',
-      borderTopWidth: 1,
-      borderTopColor: Colors.dark.border,
-      shadowColor: Colors.ui.shadow,
-      shadowOffset: {
-        width: 0,
-        height: -2,
-      },
-      shadowOpacity: Colors.opacity.low,
-      shadowRadius: 8,
-      elevation: 8,
-    }}>
+    <View
+      style={{
+        flexDirection: 'row',
+        backgroundColor: Colors.dark.surface,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        borderTopWidth: 1,
+        borderTopColor: Colors.dark.border,
+        shadowColor: Colors.ui.shadow,
+        shadowOffset: {
+          width: 0,
+          height: -2,
+        },
+        shadowOpacity: Colors.opacity.low,
+        shadowRadius: 8,
+        elevation: 8,
+      }}
+    >
       {state.routes.map((route: any, index: number) => {
         const { options } = descriptors[route.key];
         const isFocused = state.index === index;
@@ -123,18 +145,20 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
               elevation: isFocused ? 4 : 0,
             }}
           >
-            <TabBarIcon 
-              routeName={route.name} 
-              color={isFocused ? Colors.text.white : Colors.text.secondary} 
-              size={22} 
+            <TabBarIcon
+              routeName={route.name}
+              color={isFocused ? Colors.text.white : Colors.text.secondary}
+              size={22}
             />
             {isFocused && (
-              <Text style={{
-                color: Colors.text.white,
-                marginLeft: 10,
-                fontSize: 15,
-                fontWeight: '600',
-              }}>
+              <Text
+                style={{
+                  color: Colors.text.white,
+                  marginLeft: 10,
+                  fontSize: 15,
+                  fontWeight: '600',
+                }}
+              >
                 {getTabLabel(route.name)}
               </Text>
             )}
@@ -156,6 +180,7 @@ function MainTabNavigator() {
     >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Study" component={Study} />
+      <Tab.Screen name="Chat" component={GiaSuAI} />
       <Tab.Screen name="School" component={School} />
       <Tab.Screen name="Exam" component={Exam} />
     </Tab.Navigator>
