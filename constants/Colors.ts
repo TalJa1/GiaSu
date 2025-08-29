@@ -3,7 +3,7 @@
 export const Colors = {
   // Primary Colors - Education & Learning Theme
   primary: {
-    main: '#1ABC9C', // Main teal - trust, growth, learning
+    main: '#28a9a0', // Main teal - trust, growth, learning
     light: '#48C9B0', // Light teal - calm, peaceful
     dark: '#16A085', // Dark teal - professional, reliable
     accent: '#2ECC71', // Green accent - success, progress
@@ -22,7 +22,7 @@ export const Colors = {
     success: '#4CAF50', // Green - correct answers, completion
     warning: '#FF9800', // Orange - attention needed
     error: '#F44336', // Red - mistakes, errors
-    info: '#1ABC9C', // Teal - information, tips
+    info: '#28a9a0', // Teal - information, tips
   },
 
   // Text Colors - Readability & Hierarchy
@@ -78,13 +78,13 @@ export const Colors = {
     divider: '#E0E0E0', // Light gray - dividers
     shadow: 'rgba(0, 0, 0, 0.1)', // Subtle shadow
     ripple: 'rgba(26, 188, 156, 0.2)', // Touch feedback
-    focus: '#1ABC9C', // Teal - focus state
+    focus: '#28a9a0', // Teal - focus state
     disabled: '#F5F5F5', // Very light gray - disabled state
   },
 
   // Chart Colors - Data Visualization
   chart: {
-    teal: '#1ABC9C',
+    teal: '#28a9a0',
     blue: '#3498DB',
     green: '#4CAF50',
     orange: '#FF9800',
@@ -108,12 +108,12 @@ export const Colors = {
 
   // Gradient Colors - Modern UI Effects
   gradients: {
-    primary: ['#1ABC9C', '#48C9B0'],
+    primary: ['#28a9a0', '#48C9B0'],
     success: ['#4CAF50', '#8BC34A'],
     warning: ['#FF9800', '#FFC107'],
-    education: ['#1ABC9C', '#2ECC71'],
+    education: ['#28a9a0', '#2ECC71'],
     sunset: ['#FF6B6B', '#FFE66D'],
-    ocean: ['#1ABC9C', '#3498DB'],
+    ocean: ['#28a9a0', '#3498DB'],
   },
 
   // Opacity Variants - Transparency Levels
