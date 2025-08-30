@@ -31,6 +31,10 @@ const Login = () => {
   useEffect(() => {
     const configureGoogleSignIn = async () => {
       try {
+        console.log(
+          'Configuring Google Sign-In with config:',
+          GoogleSignInConfig,
+        );
         // Check if GoogleSignin module is available
         if (GoogleSignin && GoogleSignin.configure) {
           await GoogleSignin.configure(GoogleSignInConfig);
@@ -97,6 +101,9 @@ const Login = () => {
       );
     } catch (error: any) {
       console.log('Google Sign-In error:', error);
+      console.log('Error code:', error.code);
+      console.log('Error message:', error.message);
+      console.log('Full error object:', JSON.stringify(error, null, 2));
 
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         Alert.alert('Cancelled', 'Google Sign-In was cancelled');
@@ -105,7 +112,12 @@ const Login = () => {
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         Alert.alert('Error', 'Google Play Services are not available');
       } else {
-        Alert.alert('Error', 'Google Sign-In failed. Please try again.');
+        Alert.alert(
+          'Error',
+          `Google Sign-In failed: ${
+            error.message || error.code || 'Unknown error'
+          }`,
+        );
       }
     } finally {
       setIsSigningIn(false);
