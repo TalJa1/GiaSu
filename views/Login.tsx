@@ -43,15 +43,14 @@ const Login = () => {
       >
         <View style={styles.headerSection}>
           <View style={styles.logoContainer}>
-            <Image 
-              source={require('../assets/GiaSu_Logo.png')} 
+            <Image
+              source={require('../assets/app_logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.subtitle}>
-            Smart learning, bright future
-          </Text>
+          <Text style={styles.title}>GiaSu</Text>
+          <Text style={styles.subtitle}>Smart learning, bright future</Text>
         </View>
 
         <View style={styles.formContainer}>
