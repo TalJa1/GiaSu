@@ -48,8 +48,19 @@ const Login = () => {
     configureGoogleSignIn();
   }, []);
 
+  // Disabled login handlers - only Google Sign-In is functional
   const handleLogin = () => {
-    navigation.replace('MainApp');
+    Alert.alert(
+      'Not Available',
+      'Email/Password login is disabled. Please use Google Sign-In.',
+    );
+  };
+
+  const handleFacebookLogin = () => {
+    Alert.alert(
+      'Not Available',
+      'Facebook login is disabled. Please use Google Sign-In.',
+    );
   };
 
   const handleGoogleLogin = async () => {
@@ -99,11 +110,6 @@ const Login = () => {
     } finally {
       setIsSigningIn(false);
     }
-  };
-
-  const handleFacebookLogin = () => {
-    console.log('Facebook login pressed');
-    navigation.replace('MainApp');
   };
 
   return (
