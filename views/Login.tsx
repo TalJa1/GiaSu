@@ -6,27 +6,99 @@ import {
   View,
   TextInput,
   Image,
+  Alert,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {
+  GoogleSignin,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 import Colors from '../constants/Colors';
+import { GoogleSignInConfig } from '../config/GoogleSignInConfig';
 
 const Login = () => {
   const navigation = useNavigation<any>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
+  // Configure Google Sign-In
+  useEffect(() => {
+    const configureGoogleSignIn = async () => {
+      try {
+        // Check if GoogleSignin module is available
+        if (GoogleSignin && GoogleSignin.configure) {
+          await GoogleSignin.configure(GoogleSignInConfig);
+          console.log('Google Sign-In configured successfully');
+        } else {
+          console.log(
+            'GoogleSignin module not available - check native linking',
+          );
+        }
+      } catch (error) {
+        console.log('Google Sign-In configuration error:', error);
+      }
+    };
+
+    configureGoogleSignIn();
+  }, []);
 
   const handleLogin = () => {
     navigation.replace('MainApp');
   };
 
-  const handleGoogleLogin = () => {
-    console.log('Google login pressed');
-    navigation.replace('MainApp');
+  const handleGoogleLogin = async () => {
+    try {
+      setIsSigningIn(true);
+
+      // Check if GoogleSignin is available
+      if (!GoogleSignin) {
+        Alert.alert('Error', 'Google Sign-In is not available');
+        return;
+      }
+
+      // Check if Google Play Services are available
+      await GoogleSignin.hasPlayServices();
+
+      // Get user info from Google
+      const userInfo = await GoogleSignin.signIn();
+
+      console.log('Google Sign-In successful:', userInfo);
+
+      // Here you can send the user info to your backend for authentication
+      // For now, we'll just navigate to the main app
+      Alert.alert(
+        'Success!',
+        `Welcome ${userInfo.user?.name || 'User'}!\nEmail: ${
+          userInfo.user?.email || 'N/A'
+        }`,
+        [
+          {
+            text: 'Continue',
+            onPress: () => navigation.replace('MainApp'),
+          },
+        ],
+      );
+    } catch (error: any) {
+      console.log('Google Sign-In error:', error);
+
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        Alert.alert('Cancelled', 'Google Sign-In was cancelled');
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert('In Progress', 'Google Sign-In is already in progress');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Error', 'Google Play Services are not available');
+      } else {
+        Alert.alert('Error', 'Google Sign-In failed. Please try again.');
+      }
+    } finally {
+      setIsSigningIn(false);
+    }
   };
 
   const handleFacebookLogin = () => {
@@ -116,11 +188,25 @@ const Login = () => {
           </View>
 
           <TouchableOpacity
-            style={styles.googleButton}
+            style={[styles.googleButton, isSigningIn && styles.buttonDisabled]}
             onPress={handleGoogleLogin}
+            disabled={isSigningIn}
           >
-            <Icon name="google" size={20} color={Colors.text.white} />
-            <Text style={styles.socialButtonText}>Sign in with Google</Text>
+            {isSigningIn ? (
+              <>
+                <MaterialIcons
+                  name="hourglass-empty"
+                  size={20}
+                  color={Colors.text.white}
+                />
+                <Text style={styles.socialButtonText}>Signing in...</Text>
+              </>
+            ) : (
+              <>
+                <Icon name="google" size={20} color={Colors.text.white} />
+                <Text style={styles.socialButtonText}>Sign in with Google</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -320,6 +406,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 12,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   signupContainer: {
     flexDirection: 'row',
