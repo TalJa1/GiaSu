@@ -22,6 +22,7 @@ import Study from './views/bottomtabs/Study';
 import School from './views/bottomtabs/School';
 import Exam from './views/bottomtabs/Exam';
 import GiaSuAI from './views/bottomtabs/GiaSuAI';
+import Infor from './views/welcomeViews/Infor';
 
 // Create navigators
 const Stack = createNativeStackNavigator();
@@ -203,6 +204,7 @@ function App() {
         >
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="MainApp" component={MainTabNavigator} />
+          <Stack.Screen name="Infor" component={Infor} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

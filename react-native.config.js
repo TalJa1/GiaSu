@@ -4,7 +4,7 @@ module.exports = {
       platforms: {
         android: {
           sourceDir: '../node_modules/@react-native-google-signin/google-signin/android',
-          packageImportPath: 'com.reactnativegooglesignin.RNGoogleSigninPackage',
+          packageImportPath: 'import com.reactnativegooglesignin.RNGoogleSigninPackage;',
         },
       },
     },

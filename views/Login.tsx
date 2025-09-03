@@ -17,6 +17,7 @@ import {
   GoogleSignin,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
+import userApi from '../apis/userApi';
 import Colors from '../constants/Colors';
 import { GoogleSignInConfig } from '../config/GoogleSignInConfig';
 
@@ -86,19 +87,48 @@ const Login = () => {
       console.log('Google Sign-In successful:', userInfo);
 
       // Here you can send the user info to your backend for authentication
-      // For now, we'll just navigate to the main app
-      Alert.alert(
-        'Success!',
-        `Welcome ${userInfo.user?.name || 'User'}!\nEmail: ${
-          userInfo.user?.email || 'N/A'
-        }`,
-        [
-          {
-            text: 'Continue',
-            onPress: () => navigation.replace('MainApp'),
-          },
-        ],
-      );
+      // After Google sign-in, check if user exists in backend
+      const googleEmail = userInfo.user?.email;
+      const name = userInfo.user?.name || '';
+      const photo = userInfo.user?.photo || null;
+
+      if (!googleEmail) {
+        Alert.alert('Error', 'Google did not return an email for this account');
+        return;
+      }
+
+      try {
+        const existing = await userApi.getUserByEmail(googleEmail);
+        if (existing) {
+          Alert.alert(
+            'Welcome back',
+            `Welcome back ${existing.username || name}!`,
+            [
+              {
+                text: 'Continue',
+                onPress: () => navigation.replace('MainApp'),
+              },
+            ],
+          );
+          return;
+        }
+
+        // Not found - create user then navigate to Infor screen
+        const createdUser = await userApi.createUser({
+          username: name || googleEmail.split('@')[0],
+          email: googleEmail,
+          image_url: photo,
+        });
+
+        console.log('Created user:', createdUser);
+
+        Alert.alert('Account created', 'Your account has been created', [
+          { text: 'Continue', onPress: () => navigation.replace('Infor') },
+        ]);
+      } catch (apiErr: any) {
+        console.log('Backend error:', apiErr);
+        Alert.alert('Error', 'Failed to complete login. Please try again.');
+      }
     } catch (error: any) {
       console.log('Google Sign-In error:', error);
       console.log('Error code:', error.code);
