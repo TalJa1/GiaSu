@@ -18,6 +18,7 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import userApi from '../apis/userApi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '../constants/Colors';
 import { GoogleSignInConfig } from '../config/GoogleSignInConfig';
 
@@ -100,6 +101,14 @@ const Login = () => {
       try {
         const existing = await userApi.getUserByEmail(googleEmail);
         if (existing) {
+          // store user data locally then navigate
+          try {
+            await AsyncStorage.setItem('user', JSON.stringify(existing));
+            console.log('Stored user in AsyncStorage');
+          } catch (sErr) {
+            console.log('Failed to store user in AsyncStorage', sErr);
+          }
+
           Alert.alert(
             'Welcome back',
             `Welcome back ${existing.username || name}!`,
@@ -121,8 +130,15 @@ const Login = () => {
         });
 
         console.log('Created user:', createdUser);
+        // store created user locally
+        try {
+          await AsyncStorage.setItem('user', JSON.stringify(createdUser));
+          console.log('Stored created user in AsyncStorage');
+        } catch (sErr) {
+          console.log('Failed to store created user in AsyncStorage', sErr);
+        }
 
-        Alert.alert('Account created', 'Your account has been created', [
+        Alert.alert('Welcome to GiaSu!', 'Your account has been created and added to our system.', [
           { text: 'Continue', onPress: () => navigation.replace('Infor') },
         ]);
       } catch (apiErr: any) {

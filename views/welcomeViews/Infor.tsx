@@ -12,6 +12,8 @@ import {
   StatusBar,
 } from 'react-native';
 import { createUserPref } from '../../apis/userPreferencesApi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/Colors';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -35,6 +37,7 @@ const steps = [
 ];
 
 const Infor: React.FC = () => {
+  const navigation = useNavigation<any>();
   const [stepIndex, setStepIndex] = useState(0);
   const [preferredMajor, setPreferredMajor] = useState('');
   const [currentScore, setCurrentScore] = useState('');
@@ -78,8 +81,20 @@ const Infor: React.FC = () => {
       return;
     }
 
+    // try to get stored user id from AsyncStorage
+    let userId = 0;
+    try {
+      const stored = await AsyncStorage.getItem('user');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.id) userId = parsed.id;
+      }
+    } catch (e) {
+      console.log('Failed to read stored user id, defaulting to 0', e);
+    }
+
     const payload = {
-      user_id: 0, // not required from user as per requirements
+      user_id: userId,
       preferred_major: preferredMajor.trim(),
       current_score: Number(currentScore),
       expected_score: Number(expectedScore),
@@ -89,12 +104,14 @@ const Infor: React.FC = () => {
       setLoading(true);
       await createUserPref(payload as any);
       setLoading(false);
-      Alert.alert('Success', 'Your preferences were saved.');
-      // reset/optional: clear fields or navigate away
+      // reset fields
       setPreferredMajor('');
       setCurrentScore('');
       setExpectedScore('');
       setStepIndex(0);
+      Alert.alert('Success', 'Your preferences were saved.', [
+        { text: 'Continue', onPress: () => navigation.replace('MainApp') },
+      ]);
     } catch (err: any) {
       setLoading(false);
       Alert.alert('Error', err?.message ?? 'Failed to save preferences');
@@ -159,7 +176,10 @@ const Infor: React.FC = () => {
                 key={s.key}
                 style={[
                   styles.dot,
-                  { backgroundColor: i === stepIndex ? Colors.primary.main : Colors.ui.divider },
+                  {
+                    backgroundColor:
+                      i === stepIndex ? Colors.primary.main : Colors.ui.divider,
+                  },
                 ]}
               />
             ))}
@@ -168,10 +188,17 @@ const Infor: React.FC = () => {
           <View style={styles.navRow}>
             <TouchableOpacity
               onPress={goBack}
-              style={[styles.ghostButton, stepIndex === 0 && styles.buttonDisabled]}
+              style={[
+                styles.ghostButton,
+                stepIndex === 0 && styles.buttonDisabled,
+              ]}
               disabled={stepIndex === 0}
             >
-              <Icon name="arrow-back-ios" size={16} color={Colors.primary.main} />
+              <Icon
+                name="arrow-back-ios"
+                size={16}
+                color={Colors.primary.main}
+              />
               <Text style={[styles.ghostText]}>Back</Text>
             </TouchableOpacity>
 
@@ -180,8 +207,18 @@ const Infor: React.FC = () => {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <View style={styles.primaryContent}>
-                  <Text style={styles.primaryText}>{stepIndex === steps.length - 1 ? 'Submit' : 'Next'}</Text>
-                  <Icon name={stepIndex === steps.length - 1 ? 'check' : 'arrow-forward-ios'} size={16} color="#fff" />
+                  <Text style={styles.primaryText}>
+                    {stepIndex === steps.length - 1 ? 'Submit' : 'Next'}
+                  </Text>
+                  <Icon
+                    name={
+                      stepIndex === steps.length - 1
+                        ? 'check'
+                        : 'arrow-forward-ios'
+                    }
+                    size={16}
+                    color="#fff"
+                  />
                 </View>
               )}
             </TouchableOpacity>
