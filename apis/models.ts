@@ -27,3 +27,19 @@ export interface UserPref extends UserPrefInput {
   // server may return additional fields (created_at, updated_at, etc.)
   [key: string]: any;
 }
+
+export interface TrackingEntry {
+  id: number;
+  user_id: number;
+  lesson_id?: number;
+  status?: string;
+  created_at?: string;
+  [key: string]: any;
+}
+
+export interface PaginatedTracking {
+  items: TrackingEntry[];
+  total?: number;
+  skip?: number;
+  limit?: number;
+}
