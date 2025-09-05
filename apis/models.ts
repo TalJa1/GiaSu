@@ -2,6 +2,7 @@ export type CreateUserRequest = {
   username: string;
   email: string;
   image_url?: string | null;
+  role: string;
 };
 
 export type CreateUserResponse = {
@@ -10,6 +11,7 @@ export type CreateUserResponse = {
   email: string;
   image_url?: string | null;
   created_at?: string;
+  role: string;
 };
 
 

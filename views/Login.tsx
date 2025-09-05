@@ -127,6 +127,7 @@ const Login = () => {
           username: name || googleEmail.split('@')[0],
           email: googleEmail,
           image_url: photo,
+          role: 'student',
         });
 
         console.log('Created user:', createdUser);
