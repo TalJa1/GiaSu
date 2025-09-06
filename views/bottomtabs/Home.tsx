@@ -11,6 +11,7 @@ import {
   Modal,
   Animated,
   Easing,
+  Linking,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -165,14 +166,26 @@ const Home = () => {
         {
           id: '1',
           date: '01/09/2025',
-          title: 'Điểm tuyển sinh đại học 2025',
-          summary: 'tyuiop[sdfghjklasdqwertyuiop',
+          title: 'University Admission Scores 2025',
+          summary:
+            'Learn about the university admission scores for 2025, including key changes and specific requirements for each major.',
+          url: 'https://vietnamnet.vn/en/2025-university-scores-soar-in-key-majors-ministry-says-no-anomaly-2436061.html',
         },
         {
           id: '2',
-          date: '01/09/2025',
-          title: 'Điểm tuyển sinh đại học 2025',
-          summary: 'tyuiop[sdfghjklasdqwertyuiop',
+          date: '02/09/2025',
+          title: 'Guide to Choosing a Major for Students',
+          summary:
+            'A detailed guide on how to choose a major based on personal interests and skills to maximize career opportunities in the future.',
+          url: 'https://www.bestcolleges.com/resources/choosing-a-major/',
+        },
+        {
+          id: '3',
+          date: '03/09/2025',
+          title: 'Scholarship Opportunities for Students in 2025',
+          summary:
+            'Explore international and domestic scholarship opportunities for students in 2025, including eligibility and application processes.',
+          url: 'https://www.scholars4dev.com/category/scholarships-list/',
         },
       ];
 
@@ -406,16 +419,41 @@ const Home = () => {
           contentContainerStyle={styles.newsContainer}
         >
           {sampleCards.map((c: any, idx: number) => (
-            <View
+            <TouchableOpacity
               key={c.id ?? idx}
-              style={[styles.newsCard, { width: Math.min(280, width * 0.7) }]}
+              activeOpacity={0.85}
+              onPress={() => c.url && Linking.openURL(c.url)}
+              style={[styles.newsCard, { width: Math.min(300, width * 0.75) }]}
             >
-              <Text style={styles.newsDate}>{c.date}</Text>
-              <Text style={styles.newsTitle}>{c.title}</Text>
-              <Text style={styles.newsSummary} numberOfLines={5}>
-                {c.summary || 'No summary available'}
-              </Text>
-            </View>
+              <View style={styles.newsCardRow}>
+                <View style={styles.newsIconWrap}>
+                  <Icon
+                    name="newspaper-variant-outline"
+                    size={20}
+                    color={Colors.primary.main}
+                  />
+                </View>
+                <View style={styles.newsContent}>
+                  <View style={styles.newsTitleRow}>
+                    <Text style={styles.newsTitle} numberOfLines={2}>
+                      {c.title}
+                    </Text>
+                    {c.url ? (
+                      <Icon
+                        name="open-in-new"
+                        size={14}
+                        color={Colors.text.secondary}
+                        style={styles.newsLinkIcon}
+                      />
+                    ) : null}
+                  </View>
+                  <Text style={styles.newsDate}>{c.date}</Text>
+                  <Text style={styles.newsSummary} numberOfLines={3}>
+                    {c.summary || 'No summary available'}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       </ScrollView>
@@ -605,9 +643,25 @@ const styles = StyleSheet.create<any>({
     shadowOpacity: Colors.opacity.low,
     shadowRadius: 6,
     elevation: 2,
+    overflow: 'hidden',
   },
+  newsCardRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  newsIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: Colors.ui.divider,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+    flexShrink: 0,
+    overflow: 'hidden',
+  },
+  newsContent: { flex: 1, flexShrink: 1 },
+  newsTitleRow: { flexDirection: 'row', alignItems: 'center' },
+  newsLinkIcon: { marginLeft: 6 },
   newsDate: { fontSize: 12, color: Colors.text.placeholder, marginBottom: 6 },
-  newsTitle: { fontWeight: '700', marginBottom: 6 },
+  newsTitle: { fontWeight: '700', marginBottom: 6, flexShrink: 1 },
   newsSummary: { color: Colors.text.secondary, fontSize: 13 },
   card: {
     backgroundColor: Colors.background.card,
