@@ -26,4 +26,25 @@ export async function createUserPref(
     // Something else happened
     throw new Error(err?.message ?? 'Unknown error');
   }
-};
+}
+
+export async function getUserPref(prefId: number): Promise<UserPref> {
+  try {
+    const response = await axiosClient.get(`/prefs/${prefId}`);
+    return response.data as UserPref;
+  } catch (err: any) {
+    if (err?.response) {
+      const status = err.response.status;
+      const data = err.response.data;
+      throw new Error(`API Error ${status}: ${JSON.stringify(data)}`);
+    }
+
+    if (err?.request) {
+      throw new Error(
+        `Network Error: ${err.message || 'no response received'}`,
+      );
+    }
+
+    throw new Error(err?.message ?? 'Unknown error');
+  }
+}

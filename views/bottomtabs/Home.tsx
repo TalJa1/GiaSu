@@ -75,6 +75,7 @@ const Home = () => {
           return;
         }
         const res = await getTrackingByUser(userId, 0, 100);
+        console.log('Fetched tracking entries:', res);
         if (!mounted) return;
         setEntries(res.items || []);
       } catch (e: any) {
