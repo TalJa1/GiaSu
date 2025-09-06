@@ -361,13 +361,36 @@ const Home = () => {
         {/* Shortcuts */}
         <View style={styles.shortcutsContainer}>
           <TouchableOpacity style={styles.shortcut} activeOpacity={0.8}>
-            <Text style={styles.shortcutText}>study shortcut</Text>
+            <View style={styles.shortcutInner}>
+              <View style={styles.shortcutIconWrap}>
+                <Icon
+                  name="play-circle-outline"
+                  size={22}
+                  color={Colors.primary.main}
+                />
+              </View>
+              <Text style={styles.shortcutText}>Start Learning</Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.shortcut} activeOpacity={0.8}>
-            <Text style={styles.shortcutText}>take exam shortcut</Text>
+            <View style={styles.shortcutInner}>
+              <View style={styles.shortcutIconWrap}>
+                <Icon name="school" size={20} color={Colors.primary.dark} />
+              </View>
+              <Text style={styles.shortcutText}>Top schools ranking</Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.shortcut} activeOpacity={0.8}>
-            <Text style={styles.shortcutText}>see schools shortcut</Text>
+            <View style={styles.shortcutInner}>
+              <View style={styles.shortcutIconWrap}>
+                <Icon
+                  name="check-circle-outline"
+                  size={20}
+                  color={Colors.status.success}
+                />
+              </View>
+              <Text style={styles.shortcutText}>Evaluate</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -544,14 +567,28 @@ const styles = StyleSheet.create<any>({
   shortcutsContainer: { marginBottom: 16 },
   shortcut: {
     backgroundColor: Colors.background.card,
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: Colors.ui.border,
+    shadowColor: Colors.ui.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Colors.opacity.low,
+    shadowRadius: 6,
+    elevation: 2,
   },
   shortcutText: { fontWeight: '600' },
+  shortcutInner: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  shortcutIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Colors.ui.divider,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sectionHeaderRow: { marginBottom: 8 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: Colors.text.primary },
   newsScroll: { marginTop: 8 },
