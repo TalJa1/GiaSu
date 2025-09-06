@@ -22,6 +22,16 @@ import Colors from '../../constants/Colors';
 
 const { width } = Dimensions.get('window');
 
+const getRoleColor = (role?: string) => {
+  if (!role) return Colors.primary.main;
+  const r = role.toLowerCase();
+  if (r.includes('admin')) return Colors.status.error;
+  if (r.includes('gia su') || r.includes('tutor') || r.includes('teacher'))
+    return Colors.primary.dark;
+  if (r.includes('student')) return Colors.primary.light;
+  return Colors.primary.main;
+};
+
 const Home = () => {
   const [_loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<TrackingEntry[]>([]);
@@ -142,7 +152,6 @@ const Home = () => {
                 style={styles.headerIcon}
               />
             </TouchableOpacity>
-
             <Modal
               transparent
               visible={modalVisible}
@@ -216,11 +225,28 @@ const Home = () => {
         {/* Banner */}
         <View style={styles.banner}>
           <View style={styles.bannerTextWrap}>
-            <Text style={styles.welcomeText}>Welcome</Text>
-            <Text style={styles.nameText}>{userData?.username || 'Guest'}</Text>
-            <Text style={styles.smallText}>
-              {userData?.email || ''} • {userData?.role || ''}
-            </Text>
+            <Text style={styles.welcomeText}>Welcome to GiaSu</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.nameText}>
+                {userData?.username || 'Guest'}
+              </Text>
+              <View
+                style={[
+                  styles.roleChip,
+                  { borderColor: getRoleColor(userData?.role) },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.roleChipText,
+                    { color: getRoleColor(userData?.role) },
+                  ]}
+                >
+                  {userData?.role || 'N/A'}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.smallText}>{userData?.email || ''}</Text>
           </View>
         </View>
 
@@ -295,7 +321,7 @@ const styles = StyleSheet.create({
   },
   headerIcon: { fontSize: 20 },
   banner: {
-    backgroundColor: Colors.ui.disabled,
+    backgroundColor: Colors.ui.shadow,
     height: 140,
     borderRadius: 8,
     justifyContent: 'center',
@@ -310,6 +336,34 @@ const styles = StyleSheet.create({
   welcomeText: { color: Colors.text.placeholder, fontSize: 12 },
   nameText: { fontSize: 18, fontWeight: '700', color: Colors.text.primary },
   smallText: { color: Colors.text.secondary, marginTop: 4, fontSize: 13 },
+  rowSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    justifyContent: 'center',
+    marginTop: 6,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  roleChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginLeft: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+  },
+  roleChipText: {
+    color: Colors.background.primary,
+    fontWeight: '700',
+    fontSize: 12,
+  },
   bannerText: { color: Colors.text.secondary },
   bannerTextWrap: { flex: 1 },
   animatedDialog: {
