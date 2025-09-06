@@ -31,8 +31,8 @@ export interface UserPref extends UserPrefInput {
 export interface TrackingEntry {
   id: number;
   user_id: number;
-  lesson_id?: number;
-  status?: string;
+  lesson_id: number;
+  is_finished?: boolean;
   created_at?: string;
   [key: string]: any;
 }

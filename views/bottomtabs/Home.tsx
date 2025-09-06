@@ -16,10 +16,15 @@ import React, { useEffect, useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getTrackingByUser } from '../../apis/lessonApi';
+import {
+  getTrackingByUser,
+  getLessonsCount,
+  getTrackingEntriesByUser,
+} from '../../apis/lessonApi';
 import { CreateUserResponse, TrackingEntry } from '../../apis/models';
 import { getUserPref } from '../../apis/userPreferencesApi';
 import Colors from '../../constants/Colors';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 const { width } = Dimensions.get('window');
 
@@ -47,6 +52,10 @@ const Home = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [notifications, _setNotifications] = useState<string[]>([]);
   const [userPref, _setUserPref] = useState<any | null>(null);
+  const [lessonTotal, setLessonTotal] = useState<number | null>(null);
+  const [lessonTrackedCount, setLessonTrackedCount] = useState<number | null>(
+    null,
+  );
   const anim = React.useRef(new Animated.Value(0)).current; // 0 hidden, 1 visible
   React.useEffect(() => {
     if (modalVisible) {
@@ -107,6 +116,21 @@ const Home = () => {
         } catch (e) {
           console.log('failed to load user pref', e);
         }
+        // load lesson counts: total lessons and tracked by this user
+        try {
+          const [totalRes, trackedItems] = await Promise.all([
+            getLessonsCount(),
+            getTrackingEntriesByUser(userId, 0, 1000),
+          ]);
+          if (mounted) {
+            setLessonTotal(Number(totalRes) || 0);
+            setLessonTrackedCount(
+              Array.isArray(trackedItems) ? trackedItems.length : 0,
+            );
+          }
+        } catch (e) {
+          console.log('failed to load lesson counts', e);
+        }
       } catch (e: any) {
       } finally {
         if (mounted) setLoading(false);
@@ -126,6 +150,13 @@ const Home = () => {
   const prefPercent =
     prefExpected > 0
       ? Math.min(100, Math.round((prefCurrent / prefExpected) * 100))
+      : 0;
+
+  const lessonTotalSafe = lessonTotal && lessonTotal > 0 ? lessonTotal : 0;
+  const lessonTrackedSafe = lessonTrackedCount ?? 0;
+  const lessonPercent =
+    lessonTotalSafe > 0
+      ? Math.min(100, Math.round((lessonTrackedSafe / lessonTotalSafe) * 100))
       : 0;
 
   const sampleCards = entries.length
@@ -305,6 +336,28 @@ const Home = () => {
           </View>
         ) : null}
 
+        {/* Circular progress for lessons: tracked vs total (moved under Goal Tracking) */}
+        {lessonTotal !== null && lessonTrackedCount !== null ? (
+          <View style={styles.prefCircleCard}>
+            <Text style={styles.itemSmall}>Lessons progress</Text>
+            <View style={styles.circleWrap}>
+              <AnimatedCircularProgress
+                size={96}
+                width={10}
+                fill={lessonPercent}
+                tintColor={Colors.primary.main}
+                backgroundColor={Colors.ui.divider}
+              >
+                {() => (
+                  <View style={styles.circleInner}>
+                    <Text style={styles.circlePercent}>{lessonPercent}%</Text>
+                  </View>
+                )}
+              </AnimatedCircularProgress>
+            </View>
+          </View>
+        ) : null}
+
         {/* Shortcuts */}
         <View style={styles.shortcutsContainer}>
           <TouchableOpacity style={styles.shortcut} activeOpacity={0.8}>
@@ -349,7 +402,7 @@ const Home = () => {
 
 export default Home;
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create<any>({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
@@ -407,6 +460,15 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   roleChip: {
+    prefCircleCard: {
+      backgroundColor: Colors.background.card,
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 14,
+      borderWidth: 1,
+      borderColor: Colors.ui.border,
+      alignItems: 'center',
+    },
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
@@ -549,4 +611,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary.main,
   },
   progressText: { marginLeft: 8, color: Colors.text.secondary, minWidth: 80 },
+  circleWrap: { alignItems: 'center', marginBottom: 16 },
+  circleInner: { alignItems: 'center', justifyContent: 'center' },
+  circlePercent: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  circleSmall: { fontSize: 12, color: Colors.text.secondary, marginTop: 4 },
 });
