@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {
   StyleSheet,
   Text,
@@ -18,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTrackingByUser } from '../../apis/lessonApi';
 import { CreateUserResponse, TrackingEntry } from '../../apis/models';
+import { getUserPref } from '../../apis/userPreferencesApi';
 import Colors from '../../constants/Colors';
 
 const { width } = Dimensions.get('window');
@@ -45,6 +47,7 @@ const Home = () => {
   });
   const [modalVisible, setModalVisible] = useState(false);
   const [notifications, _setNotifications] = useState<string[]>([]);
+  const [userPref, _setUserPref] = useState<any | null>(null);
   const anim = React.useRef(new Animated.Value(0)).current; // 0 hidden, 1 visible
   React.useEffect(() => {
     if (modalVisible) {
@@ -78,6 +81,33 @@ const Home = () => {
         console.log('Fetched tracking entries:', res);
         if (!mounted) return;
         setEntries(res.items || []);
+
+        // Try to load user's preference. First check common fields on stored user
+        try {
+          let pref = null as any;
+          const prefId = userData.id;
+          if (prefId) {
+            pref = await getUserPref(Number(prefId));
+          } else {
+            // fallback: try listing prefs for user via query endpoint /prefs?user_id={userId}
+            try {
+              const listRes: any = await (
+                await import('../../apis/axiosClient')
+              ).default.get(`/prefs?user_id=${userId}`);
+              const items = listRes?.data;
+              if (Array.isArray(items) && items.length > 0) pref = items[0];
+            } catch (e) {
+              // ignore fallback errors
+              console.log('prefs list fallback failed', e);
+            }
+          }
+
+          if (pref && mounted) {
+            _setUserPref(pref);
+          }
+        } catch (e) {
+          console.log('failed to load user pref', e);
+        }
       } catch (e: any) {
       } finally {
         if (mounted) setLoading(false);
@@ -88,7 +118,16 @@ const Home = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [userData.id]);
+
+  // preference progress: treat expected as baseline (showed as 100%) and
+  // compute current as percent of expected
+  const prefExpected = userPref ? Number(userPref.expected_score) || 100 : 100;
+  const prefCurrent = userPref ? Number(userPref.current_score) || 0 : 0;
+  const prefPercent =
+    prefExpected > 0
+      ? Math.min(100, Math.round((prefCurrent / prefExpected) * 100))
+      : 0;
 
   const sampleCards = entries.length
     ? entries
@@ -250,6 +289,21 @@ const Home = () => {
             <Text style={styles.smallText}>{userData?.email || ''}</Text>
           </View>
         </View>
+
+        {/* Preference progress (current vs expected) */}
+        {userPref ? (
+          <View style={styles.prefProgressCard}>
+            <Text style={styles.prefTitle}>{userPref.preferred_major}</Text>
+            <View style={styles.progressRow}>
+              <View style={styles.progressBarBackground}>
+                <View
+                  style={[styles.progressBarFill, { width: `${prefPercent}%` }]}
+                />
+              </View>
+              <Text style={styles.progressText}>{prefPercent}% / 100%</Text>
+            </View>
+          </View>
+        ) : null}
 
         {/* Shortcuts */}
         <View style={styles.shortcutsContainer}>
@@ -473,4 +527,26 @@ const styles = StyleSheet.create({
   itemSmall: { color: Colors.text.placeholder, marginTop: 6, fontSize: 12 },
   error: { color: Colors.status.error, textAlign: 'center', marginTop: 20 },
   empty: { textAlign: 'center', marginTop: 20, color: Colors.text.secondary },
+  prefProgressCard: {
+    backgroundColor: Colors.background.card,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.ui.border,
+  },
+  prefTitle: { fontWeight: '700', marginBottom: 8 },
+  progressRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  progressBarBackground: {
+    flex: 1,
+    height: 12,
+    backgroundColor: Colors.ui.divider,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: Colors.primary.main,
+  },
+  progressText: { marginLeft: 8, color: Colors.text.secondary, minWidth: 80 },
 });
