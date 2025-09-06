@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 import {
   StyleSheet,
   Text,
@@ -293,6 +292,7 @@ const Home = () => {
         {/* Preference progress (current vs expected) */}
         {userPref ? (
           <View style={styles.prefProgressCard}>
+            <Text style={styles.itemSmall}>Goal Tracking</Text>
             <Text style={styles.prefTitle}>{userPref.preferred_major}</Text>
             <View style={styles.progressRow}>
               <View style={styles.progressBarBackground}>
