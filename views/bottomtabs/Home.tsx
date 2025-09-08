@@ -217,7 +217,10 @@ const Home = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={Colors.primary.main}
+      />
       <ScrollView
         contentContainerStyle={styles.contentContainer}
         refreshControl={

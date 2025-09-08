@@ -43,3 +43,13 @@ export interface PaginatedTracking {
   skip?: number;
   limit?: number;
 }
+
+export type AIGenerateRequest = {
+  prompt: string;
+  [key: string]: any;
+};
+
+export type AIGenerateResponse = {
+  output?: string;
+  raw?: any;
+};
