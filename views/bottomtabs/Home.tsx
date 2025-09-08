@@ -12,6 +12,7 @@ import {
   Animated,
   Easing,
   Linking,
+  RefreshControl,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -58,6 +59,7 @@ const Home = () => {
     null,
   );
   const anim = React.useRef(new Animated.Value(0)).current; // 0 hidden, 1 visible
+  const [refreshing, setRefreshing] = useState(false);
   React.useEffect(() => {
     if (modalVisible) {
       anim.setValue(0);
@@ -70,79 +72,100 @@ const Home = () => {
     }
   }, [modalVisible, anim]);
 
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        const stored = await AsyncStorage.getItem('user');
-        if (!stored) {
-          setLoading(false);
-          return;
-        }
-        const parsed = JSON.parse(stored);
-        setUserData(parsed);
-        const userId = parsed?.id;
-        if (!userId) {
-          setLoading(false);
-          return;
-        }
-        const res = await getTrackingByUser(userId, 0, 100);
-        console.log('Fetched tracking entries:', res);
-        if (!mounted) return;
-        setEntries(res.items || []);
-
-        // Try to load user's preference. First check common fields on stored user
-        try {
-          let pref = null as any;
-          const prefId = userData.id;
-          if (prefId) {
-            pref = await getUserPref(Number(prefId));
-          } else {
-            // fallback: try listing prefs for user via query endpoint /prefs?user_id={userId}
-            try {
-              const listRes: any = await (
-                await import('../../apis/axiosClient')
-              ).default.get(`/prefs?user_id=${userId}`);
-              const items = listRes?.data;
-              if (Array.isArray(items) && items.length > 0) pref = items[0];
-            } catch (e) {
-              // ignore fallback errors
-              console.log('prefs list fallback failed', e);
-            }
-          }
-
-          if (pref && mounted) {
-            _setUserPref(pref);
-          }
-        } catch (e) {
-          console.log('failed to load user pref', e);
-        }
-        // load lesson counts: total lessons and tracked by this user
-        try {
-          const [totalRes, trackedItems] = await Promise.all([
-            getLessonsCount(),
-            getTrackingEntriesByUser(userId, 0, 1000),
-          ]);
-          if (mounted) {
-            setLessonTotal(Number(totalRes) || 0);
-            setLessonTrackedCount(
-              Array.isArray(trackedItems) ? trackedItems.length : 0,
-            );
-          }
-        } catch (e) {
-          console.log('failed to load lesson counts', e);
-        }
-      } catch (e: any) {
-      } finally {
-        if (mounted) setLoading(false);
+  // central data loader used by initial load and pull-to-refresh
+  const loadData = async (opts?: { showLoading?: boolean }) => {
+    if (opts?.showLoading) setLoading(true);
+    setRefreshing(true);
+    try {
+      const stored = await AsyncStorage.getItem('user');
+      if (!stored) {
+        return;
       }
-    };
+      const parsed = JSON.parse(stored);
+      // write parsed user to state (so UI shows correct user)
+      setUserData(parsed);
+      const userId = parsed?.id;
+      if (!userId) return;
 
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, [userData.id]);
+      // tracking entries
+      const res = await getTrackingByUser(userId, 0, 100);
+      setEntries(res.items || []);
+
+      // Try to load user's preference. Use parsed (fresh) user fields
+      try {
+        let pref = null as any;
+        const prefId =
+          parsed?.pref_id || parsed?.preference_id || parsed?.preference?.id;
+        if (prefId) {
+          // load by id first
+          try {
+            const fetched = await getUserPref(Number(prefId));
+            // safety: ensure the returned pref belongs to the current user
+            if (fetched && Number(fetched.user_id) === Number(userId)) {
+              pref = fetched;
+            } else {
+              console.warn(
+                `[Home] pref id ${prefId} returned user_id=${fetched?.user_id} but current user is ${userId}, falling back to listing prefs for user.`,
+              );
+            }
+          } catch (e) {
+            console.warn('[Home] getUserPref error, will try list fallback', e);
+          }
+        }
+
+        if (!pref) {
+          // fallback: list prefs for user and pick the one belonging to this user
+          try {
+            const client: any = (await import('../../apis/axiosClient'))
+              .default;
+            const listRes: any = await client.get(`/prefs?user_id=${userId}`);
+            // API might return array or { items: [] }
+            const data = listRes?.data ?? listRes;
+            const items = Array.isArray(data)
+              ? data
+              : data?.items ?? data?.results ?? [];
+            if (Array.isArray(items) && items.length > 0) {
+              // pick the first pref that matches this user (defensive)
+              const found = items.find(
+                (it: any) => Number(it.user_id) === Number(userId),
+              );
+              pref = found ?? items[0];
+            }
+          } catch (e) {
+            console.log('prefs list fallback failed', e);
+          }
+        }
+
+        if (pref) _setUserPref(pref);
+      } catch (e) {
+        console.log('failed to load user pref', e);
+      }
+
+      // load lesson counts
+      try {
+        const [totalRes, trackedItems] = await Promise.all([
+          getLessonsCount(),
+          getTrackingEntriesByUser(userId, 0, 1000),
+        ]);
+        setLessonTotal(Number(totalRes) || 0);
+        setLessonTrackedCount(
+          Array.isArray(trackedItems) ? trackedItems.length : 0,
+        );
+      } catch (e) {
+        console.log('failed to load lesson counts', e);
+      }
+    } catch (e) {
+      console.log('loadData error', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    // initial load
+    loadData({ showLoading: true });
+  }, []);
 
   // preference progress: treat expected as baseline (showed as 100%) and
   // compute current as percent of expected
@@ -189,10 +212,18 @@ const Home = () => {
         },
       ];
 
+  // handleRefresh now reuses loadData
+  const handleRefresh = () => loadData();
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
         {/* Header Row with small icons */}
         <View style={styles.headerRow}>
           {userData?.image_url ? (
@@ -420,9 +451,9 @@ const Home = () => {
         >
           {sampleCards.map((c: any, idx: number) => (
             <View
-                key={c.id ?? idx}
-                style={[styles.newsCard, { width: Math.min(300, width * 0.75) }]}
-              >
+              key={c.id ?? idx}
+              style={[styles.newsCard, { width: Math.min(300, width * 0.75) }]}
+            >
               <View style={styles.newsCardRow}>
                 <View style={styles.newsIconWrap}>
                   <Icon
@@ -436,21 +467,21 @@ const Home = () => {
                     <Text style={styles.newsTitle} numberOfLines={2}>
                       {c.title}
                     </Text>
-                      {c.url ? (
-                        <TouchableOpacity
-                          onPress={() => c.url && Linking.openURL(c.url)}
-                          activeOpacity={0.75}
-                          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-                          style={styles.newsLinkBtn}
-                        >
-                          <Icon
-                            name="open-in-new"
-                            size={14}
-                            color={Colors.text.secondary}
-                            style={styles.newsLinkIcon}
-                          />
-                        </TouchableOpacity>
-                      ) : null}
+                    {c.url ? (
+                      <TouchableOpacity
+                        onPress={() => c.url && Linking.openURL(c.url)}
+                        activeOpacity={0.75}
+                        hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+                        style={styles.newsLinkBtn}
+                      >
+                        <Icon
+                          name="open-in-new"
+                          size={14}
+                          color={Colors.text.secondary}
+                          style={styles.newsLinkIcon}
+                        />
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
                   <Text style={styles.newsDate}>{c.date}</Text>
                   <Text style={styles.newsSummary} numberOfLines={3}>
@@ -458,7 +489,7 @@ const Home = () => {
                   </Text>
                 </View>
               </View>
-              </View>
+            </View>
           ))}
         </ScrollView>
       </ScrollView>
