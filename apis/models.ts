@@ -53,3 +53,18 @@ export type AIGenerateResponse = {
   output?: string;
   raw?: any;
 };
+
+export type UniversityRecommendation = {
+  name: string;
+  reason?: string;
+  score?: number | null;
+  [key: string]: any;
+};
+
+export type RecommendRequest = {
+  major: string;
+  interests?: string;
+  location?: string;
+  limit?: number;
+  [key: string]: any;
+};
