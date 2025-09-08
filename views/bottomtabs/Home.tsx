@@ -419,12 +419,10 @@ const Home = () => {
           contentContainerStyle={styles.newsContainer}
         >
           {sampleCards.map((c: any, idx: number) => (
-            <TouchableOpacity
-              key={c.id ?? idx}
-              activeOpacity={0.85}
-              onPress={() => c.url && Linking.openURL(c.url)}
-              style={[styles.newsCard, { width: Math.min(300, width * 0.75) }]}
-            >
+            <View
+                key={c.id ?? idx}
+                style={[styles.newsCard, { width: Math.min(300, width * 0.75) }]}
+              >
               <View style={styles.newsCardRow}>
                 <View style={styles.newsIconWrap}>
                   <Icon
@@ -438,14 +436,21 @@ const Home = () => {
                     <Text style={styles.newsTitle} numberOfLines={2}>
                       {c.title}
                     </Text>
-                    {c.url ? (
-                      <Icon
-                        name="open-in-new"
-                        size={14}
-                        color={Colors.text.secondary}
-                        style={styles.newsLinkIcon}
-                      />
-                    ) : null}
+                      {c.url ? (
+                        <TouchableOpacity
+                          onPress={() => c.url && Linking.openURL(c.url)}
+                          activeOpacity={0.75}
+                          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+                          style={styles.newsLinkBtn}
+                        >
+                          <Icon
+                            name="open-in-new"
+                            size={14}
+                            color={Colors.text.secondary}
+                            style={styles.newsLinkIcon}
+                          />
+                        </TouchableOpacity>
+                      ) : null}
                   </View>
                   <Text style={styles.newsDate}>{c.date}</Text>
                   <Text style={styles.newsSummary} numberOfLines={3}>
@@ -453,7 +458,7 @@ const Home = () => {
                   </Text>
                 </View>
               </View>
-            </TouchableOpacity>
+              </View>
           ))}
         </ScrollView>
       </ScrollView>
@@ -660,6 +665,7 @@ const styles = StyleSheet.create<any>({
   newsContent: { flex: 1, flexShrink: 1 },
   newsTitleRow: { flexDirection: 'row', alignItems: 'center' },
   newsLinkIcon: { marginLeft: 6 },
+  newsLinkBtn: { padding: 6, marginLeft: 6, alignSelf: 'flex-start' },
   newsDate: { fontSize: 12, color: Colors.text.placeholder, marginBottom: 6 },
   newsTitle: { fontWeight: '700', marginBottom: 6, flexShrink: 1 },
   newsSummary: { color: Colors.text.secondary, fontSize: 13 },
