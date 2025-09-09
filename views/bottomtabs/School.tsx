@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/Colors';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AIApi from '../../apis/AIApi';
+import UniversityPreview from '../common/UniversityPreview';
 import MarkdownRenderer from '../../components/MarkdownRenderer';
 
 const ICON_SIZE = 20;
@@ -303,17 +304,20 @@ const School: React.FC = () => {
         renderItem={renderCard}
         ItemSeparatorComponent={ItemSeparator}
         ListHeaderComponent={
-          <SchoolHeader
-            interest={interest}
-            setInterest={setInterest}
-            major={major}
-            setMajor={setMajor}
-            location={location}
-            setLocation={setLocation}
-            onSearch={handleSearch}
-            loading={loading}
-            error={error}
-          />
+          <>
+            <UniversityPreview />
+            <SchoolHeader
+              interest={interest}
+              setInterest={setInterest}
+              major={major}
+              setMajor={setMajor}
+              location={location}
+              setLocation={setLocation}
+              onSearch={handleSearch}
+              loading={loading}
+              error={error}
+            />
+          </>
         }
         ListFooterComponent={
           rawMarkdown && !normalizedParsedRaw ? (

@@ -23,6 +23,7 @@ import School from './views/bottomtabs/School';
 import Exam from './views/bottomtabs/Exam';
 import GiaSuAI from './views/bottomtabs/GiaSuAI';
 import Infor from './views/welcomeViews/Infor';
+import UniversitiesList from './views/UniversitiesList';
 
 // Create navigators
 const Stack = createNativeStackNavigator();
@@ -204,6 +205,7 @@ function App() {
         >
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="MainApp" component={MainTabNavigator} />
+          <Stack.Screen name="Universities" component={UniversitiesList} />
           <Stack.Screen name="Infor" component={Infor} />
         </Stack.Navigator>
       </NavigationContainer>

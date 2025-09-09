@@ -69,12 +69,24 @@ export type RecommendRequest = {
   [key: string]: any;
 };
 
+export type Score = {
+  id?: number;
+  university_id?: number;
+  year?: number;
+  min_score?: number | null;
+  avg_score?: number | null;
+  max_score?: number | null;
+  [key: string]: any;
+};
+
 export type University = {
   id: number;
   name: string;
   location?: string;
   type?: string;
   description?: string;
+  // new: scores array with historical/yearly score metadata
+  scores?: Score[];
   [key: string]: any;
 };
 
