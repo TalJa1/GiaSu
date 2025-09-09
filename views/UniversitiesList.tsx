@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import Colors from '../constants/Colors';
 import { getUniversities } from '../apis/universityApi';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -16,6 +17,7 @@ const UniversitiesList: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
     let mounted = true;
@@ -43,9 +45,15 @@ const UniversitiesList: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Universities</Text>
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        <TouchableOpacity
+          style={styles.headerBackButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="arrow-left" size={22} color={Colors.text.white} />
+        </TouchableOpacity>
+        <Text style={styles.sectionTitleCentered}>Universities</Text>
       </View>
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <FlatList
         data={items}
@@ -116,8 +124,30 @@ const styles = StyleSheet.create<any>({
   container: { flex: 1, backgroundColor: Colors.background.secondary },
   loading: { marginTop: 20 },
   content: { padding: 16, paddingBottom: 40 },
-  sectionHeaderRow: { marginBottom: 8 },
+  sectionHeaderRow: {
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    backgroundColor: Colors.primary.main,
+    paddingHorizontal: 16,
+  },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: Colors.text.primary },
+  sectionTitleCentered: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.text.white,
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerBackButton: {
+    position: 'absolute',
+    left: 16,
+    height: '100%',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
   card: {
     backgroundColor: Colors.background.primary,
     borderRadius: 12,
