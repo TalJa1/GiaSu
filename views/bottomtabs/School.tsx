@@ -120,7 +120,7 @@ const SchoolHeader: React.FC<SchoolHeaderProps> = ({
   return (
     <>
       <View style={styles.banner}>
-        <Text style={styles.bannerTitle}>Find the perfect university</Text>
+        <Text style={styles.bannerTitle}>Find the perfect university with GiaSu AI</Text>
         <Text style={styles.bannerSubtitle}>
           Fill in the fields below for tailored recommendations
         </Text>
