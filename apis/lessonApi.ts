@@ -1,5 +1,10 @@
 import axiosClient from './axiosClient';
-import { PaginatedTracking, TrackingEntry } from './models';
+import {
+  PaginatedTracking,
+  TrackingEntry,
+  Lesson,
+  GetLessonsOptions,
+} from './models';
 
 export async function getTrackingByUser(
   userId: number,
@@ -66,6 +71,62 @@ export async function getTrackingEntriesByUser(
   try {
     const data = await getTrackingByUser(userId, skip, limit);
     return data.items ?? [];
+  } catch (err: any) {
+    if (err?.response) {
+      throw new Error(
+        `API Error ${err.response.status}: ${JSON.stringify(
+          err.response.data,
+        )}`,
+      );
+    }
+    if (err?.request) {
+      throw new Error(`Network Error: ${err.message || 'no response'}`);
+    }
+    throw new Error(err?.message ?? 'Unknown error');
+  }
+}
+
+export async function getLessons(
+  options: GetLessonsOptions = { skip: 0, limit: 100 },
+): Promise<{ items: Lesson[]; total?: number; skip?: number; limit?: number }> {
+  try {
+    const response = await axiosClient.get('/lessons', {
+      params: { skip: options.skip ?? 0, limit: options.limit ?? 100 },
+    });
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return {
+        items: data as Lesson[],
+        total: data.length,
+        skip: options.skip,
+        limit: options.limit,
+      };
+    }
+    return {
+      items: data.items ?? data.results ?? [],
+      total: data.total ?? data.count ?? undefined,
+      skip: data.skip ?? options.skip,
+      limit: data.limit ?? options.limit,
+    };
+  } catch (err: any) {
+    if (err?.response) {
+      throw new Error(
+        `API Error ${err.response.status}: ${JSON.stringify(
+          err.response.data,
+        )}`,
+      );
+    }
+    if (err?.request) {
+      throw new Error(`Network Error: ${err.message || 'no response'}`);
+    }
+    throw new Error(err?.message ?? 'Unknown error');
+  }
+}
+
+export async function getAllLessons(skip = 0, limit = 100): Promise<Lesson[]> {
+  try {
+    const pag = await getLessons({ skip, limit });
+    return pag.items ?? [];
   } catch (err: any) {
     if (err?.response) {
       throw new Error(

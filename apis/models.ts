@@ -94,3 +94,34 @@ export type GetUniversitiesOptions = {
   skip?: number;
   limit?: number;
 };
+
+export type Lesson = {
+  id: number;
+  title?: string;
+  description?: string;
+  content?: string;
+  subject?: string;
+  content_url?: string;
+  created_by?: number;
+  created_at?: string;
+  [key: string]: any;
+};
+
+export type GetLessonsOptions = {
+  skip?: number;
+  limit?: number;
+};
+
+export type Quizlet = {
+  id?: number;
+  lesson_id?: number;
+  question?: string;
+  answer?: string;
+  created_at?: string;
+  [key: string]: any;
+};
+
+export type GetQuizletsOptions = {
+  skip?: number;
+  limit?: number;
+};
