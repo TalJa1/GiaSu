@@ -68,3 +68,17 @@ export type RecommendRequest = {
   limit?: number;
   [key: string]: any;
 };
+
+export type University = {
+  id: number;
+  name: string;
+  location?: string;
+  type?: string;
+  description?: string;
+  [key: string]: any;
+};
+
+export type GetUniversitiesOptions = {
+  skip?: number;
+  limit?: number;
+};
