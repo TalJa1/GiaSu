@@ -200,11 +200,18 @@ function App() {
         <Stack.Navigator
           initialRouteName="Login"
           screenOptions={{
-            headerShown: false, // Hide headers for all stack screens
+            headerShown: false, // Hide headers for all stack screens by default
           }}
         >
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="MainApp" component={MainTabNavigator} />
+          <Stack.Screen
+            name="Quizlet"
+            component={require('./views/Quizlet').default}
+            options={{
+              headerShown: false,
+            }}
+          />
           <Stack.Screen name="Universities" component={UniversitiesList} />
           <Stack.Screen name="Infor" component={Infor} />
         </Stack.Navigator>

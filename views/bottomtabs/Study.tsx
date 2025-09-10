@@ -19,7 +19,10 @@ import { Quizlet } from '../../apis/models';
 
 const { width } = Dimensions.get('window');
 
+import { useNavigation } from '@react-navigation/native';
+
 const Study: React.FC = () => {
+  const navigation = useNavigation();
   const [quizlets, setQuizlets] = useState<Quizlet[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -213,12 +216,13 @@ const Study: React.FC = () => {
                   </View>
 
                   <View style={styles.cardFooter}>
-                    <TouchableOpacity
-                      style={styles.startButton}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.startButtonText}>Let’s go</Text>
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.startButton}
+                        activeOpacity={0.8}
+                        onPress={() => (navigation as any).navigate('Quizlet', { lessonId: item.lesson_id })}
+                      >
+                        <Text style={styles.startButtonText}>Let’s go</Text>
+                      </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.iconButton}
                       activeOpacity={0.8}
