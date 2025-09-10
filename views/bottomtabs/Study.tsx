@@ -14,18 +14,64 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../constants/Colors';
 import { getAllQuizlets } from '../../apis/quizletApi';
+import { getAllLessons } from '../../apis/lessonApi';
 import { Quizlet } from '../../apis/models';
+import type { Lesson as LessonModel } from '../../apis/models';
 // Using custom view-based grouped bars (no external chart lib required for this widget)
 
 const { width } = Dimensions.get('window');
 
 import { useNavigation } from '@react-navigation/native';
 
+export type LessonProps = {
+  lesson: LessonModel;
+};
+
+export const Lesson: React.FC<LessonProps> = ({ lesson }) => {
+  return (
+    <View style={[styles.quizletCard, { width: '100%', padding: 18 }]}>
+      <Text style={[styles.quizletTitle, { fontSize: 18 }]}>
+        {lesson.title ?? `Lesson ${lesson.id}`}
+      </Text>
+
+      <Text style={[styles.quizletMeta, { marginTop: 6 }]} numberOfLines={4}>
+        {lesson.description ?? lesson.content ?? 'No description available.'}
+      </Text>
+
+      <View style={{ marginTop: 10 }}>
+        {lesson.subject ? (
+          <Text style={styles.quizletMeta}>Subject: {lesson.subject}</Text>
+        ) : null}
+        {lesson.content_url ? (
+          <Text style={styles.quizletMeta}>URL: {lesson.content_url}</Text>
+        ) : null}
+        {lesson.created_by ? (
+          <Text style={styles.quizletMeta}>Author id: {lesson.created_by}</Text>
+        ) : null}
+        {lesson.created_at ? (
+          <Text style={styles.quizletMeta}>Created: {lesson.created_at}</Text>
+        ) : null}
+      </View>
+
+  <View style={{ marginTop: 12 }}>
+        <Text style={[styles.quizletMeta, { color: Colors.text.secondary }]}>Raw data:</Text>
+        <Text style={[styles.quizletMeta, { fontSize: 12 }]} numberOfLines={6}>
+          {JSON.stringify(lesson, null, 2)}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
 const Study: React.FC = () => {
   const navigation = useNavigation();
   const [quizlets, setQuizlets] = useState<Quizlet[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lessons, setLessons] = useState<LessonModel[]>([]);
+  const [lessonLoading, setLessonLoading] = useState(false);
+  const [lessonError, setLessonError] = useState<string | null>(null);
+  const [showAllLessons, setShowAllLessons] = useState(false);
 
   // Fake user chart data (English names). score is 0-100, progress is 0-1
   const users = [
@@ -52,6 +98,28 @@ const Study: React.FC = () => {
       }
     };
     load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadOneLesson = async () => {
+      setLessonLoading(true);
+      try {
+        // fetch multiple lessons (limit 50)
+        const items = await getAllLessons(0, 50);
+        if (!mounted) return;
+        setLessons(items ?? []);
+      } catch (err: any) {
+        if (!mounted) return;
+        setLessonError(err?.message ?? 'Failed to load lessons');
+      } finally {
+        if (mounted) setLessonLoading(false);
+      }
+    };
+    loadOneLesson();
     return () => {
       mounted = false;
     };
@@ -148,7 +216,7 @@ const Study: React.FC = () => {
           </View>
         </View>
 
-        <View style={{ marginTop: 18 }}>
+  <View style={{ marginTop: 18 }}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.panelTitle}>Study with flashcards</Text>
           </View>
@@ -233,6 +301,55 @@ const Study: React.FC = () => {
                         size={22}
                         color={Colors.primary.main}
                       />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            />
+          )}
+        </View>
+
+        <View style={{ marginTop: 18 }}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.panelTitle}>Lessons</Text>
+            <TouchableOpacity onPress={() => setShowAllLessons(s => !s)} activeOpacity={0.8}>
+              <Text style={styles.seeAll}>{showAllLessons ? 'Show less' : 'Show all'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {lessonLoading ? (
+            <ActivityIndicator style={{ marginTop: 12 }} />
+          ) : lessonError ? (
+            <Text style={styles.errorText}>{lessonError}</Text>
+          ) : lessons.length === 0 ? (
+            <Text style={{ marginTop: 8, color: Colors.text.secondary }}>
+              No lesson data available.
+            </Text>
+          ) : (
+            <FlatList
+              data={showAllLessons ? lessons : lessons.slice(0, 3)}
+              horizontal
+              keyExtractor={l => String(l.id)}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carousel}
+              renderItem={({ item }) => (
+                <View style={[styles.lessonCard, { width: Math.min(320, width * 0.75) }]}>
+                  <View style={styles.lessonHeader}>
+                    <View style={styles.iconWrap}>
+                      <Icon name="book" size={18} color={Colors.primary.main} />
+                    </View>
+                    <Text style={styles.lessonTitle} numberOfLines={2}>{item.title ?? `Lesson ${item.id}`}</Text>
+                  </View>
+
+                  <Text style={styles.lessonDescription} numberOfLines={3}>{item.description ?? 'No description available.'}</Text>
+
+                  <View style={{ width: '100%', marginTop: 12 }}>
+                    <TouchableOpacity
+                      style={styles.learnButton}
+                      activeOpacity={0.85}
+                      onPress={() => (navigation as any).navigate('LessonDetail', { lessonId: item.id })}
+                    >
+                      <Text style={styles.learnButtonText}>Learn</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -413,4 +530,39 @@ const styles = StyleSheet.create({
   },
   startButtonText: { color: Colors.text.white, fontWeight: '700' },
   iconButton: { padding: 8 },
+  // lesson card styles
+  lessonCard: {
+    backgroundColor: Colors.background.primary,
+    borderRadius: 14,
+    padding: 14,
+    marginRight: 14,
+    minHeight: 120,
+    // subtle shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+    justifyContent: 'flex-start',
+  },
+  lessonHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Colors.ui.disabled,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  lessonTitle: { fontSize: 16, fontWeight: '800', color: Colors.text.primary, flex: 1 },
+  lessonDescription: { marginTop: 4, color: Colors.text.secondary, fontSize: 13 },
+  learnButton: {
+    backgroundColor: Colors.primary.main,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  learnButtonText: { color: Colors.text.white, fontWeight: '800' },
 });

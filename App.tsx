@@ -212,6 +212,11 @@ function App() {
               headerShown: false,
             }}
           />
+          <Stack.Screen
+            name="LessonDetail"
+            component={require('./views/LessonDetail').default}
+            options={{ headerShown: false }}
+          />
           <Stack.Screen name="Universities" component={UniversitiesList} />
           <Stack.Screen name="Infor" component={Infor} />
         </Stack.Navigator>

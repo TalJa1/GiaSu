@@ -35,7 +35,22 @@ export async function getUserByEmail(
   }
 }
 
+export async function getUserById(
+  userId: number,
+): Promise<CreateUserResponse | null> {
+  if (userId == null) throw new Error('userId is required');
+  try {
+    const res = await axiosClient.get<CreateUserResponse>(`/users/${userId}`);
+    return res.data;
+  } catch (err: any) {
+    if (err.response && err.response.status === 404) return null;
+    if (err.response && err.response.data) throw err.response.data;
+    throw err;
+  }
+}
+
 export default {
   createUser,
   getUserByEmail,
+  getUserById,
 };

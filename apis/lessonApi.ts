@@ -141,3 +141,24 @@ export async function getAllLessons(skip = 0, limit = 100): Promise<Lesson[]> {
     throw new Error(err?.message ?? 'Unknown error');
   }
 }
+
+export async function getLessonById(lessonId: number): Promise<Lesson | null> {
+  try {
+  const response = await axiosClient.get(`/lessons/${lessonId}`);
+    const data = response.data;
+    if (!data) return null;
+    return (data as Lesson) ?? null;
+  } catch (err: any) {
+    if (err?.response) {
+      throw new Error(
+        `API Error ${err.response.status}: ${JSON.stringify(
+          err.response.data,
+        )}`,
+      );
+    }
+    if (err?.request) {
+      throw new Error(`Network Error: ${err.message || 'no response'}`);
+    }
+    throw new Error(err?.message ?? 'Unknown error');
+  }
+}
