@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -14,6 +15,8 @@ import Colors from '../constants/Colors';
 import { getLessonById } from '../apis/lessonApi';
 import { getUserById } from '../apis/userApi';
 import type { Lesson } from '../apis/models';
+import MarkdownRenderer from '../components/MarkdownRenderer';
+import HtmlToMarkdown from '../components/HtmlToMarkdown';
 
 const LessonDetail: React.FC<any> = ({ route }) => {
   const { lessonId } = route.params ?? {};
@@ -112,12 +115,47 @@ const LessonDetail: React.FC<any> = ({ route }) => {
             </Text>
 
             <Text style={styles.sectionTitle}>Content</Text>
-            <Text style={styles.body}>{lesson.content ?? 'No content.'}</Text>
+            {lesson.content ? (
+              // if content contains HTML-like tags, convert to markdown first
+              /<[^>]+>/.test(lesson.content) ? (
+                <HtmlToMarkdown html={lesson.content} />
+              ) : (
+                <MarkdownRenderer text={lesson.content} />
+              )
+            ) : (
+              <Text style={styles.body}>No content.</Text>
+            )}
 
             {lesson.content_url ? (
               <>
-                <Text style={styles.sectionTitle}>Content URL</Text>
-                <Text style={styles.body}>{lesson.content_url}</Text>
+                <Text style={styles.sectionTitle}>Additional Resources</Text>
+                {(() => {
+                  const raw = String(lesson.content_url ?? '');
+                  const urls = raw
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter((s) => s.length > 0);
+                  if (urls.length === 0) return <Text style={styles.body}>No URL</Text>;
+                  return urls.map((url, i) => {
+                    const handleOpen = () => {
+                      // ensure scheme
+                      const href = /^https?:\/\//i.test(url) ? url : `http://${url}`;
+                      Linking.openURL(href).catch(() => {
+                        // ignore errors for now
+                      });
+                    };
+                    return (
+                      <TouchableOpacity
+                        key={`link-${i}`}
+                        style={styles.linkButton}
+                        activeOpacity={0.8}
+                        onPress={handleOpen}
+                      >
+                        <Text style={styles.linkButtonText}>{`Link${i + 1}`}</Text>
+                      </TouchableOpacity>
+                    );
+                  });
+                })()}
               </>
             ) : null}
           </View>
@@ -163,4 +201,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   headerRight: { width: 40 },
+  linkButton: {
+    marginTop: 8,
+    backgroundColor: Colors.primary.light,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  linkButtonText: { color: Colors.text.white, fontWeight: '700' },
 });
