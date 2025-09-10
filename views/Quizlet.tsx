@@ -67,7 +67,7 @@ const QuizletScreen: React.FC<any> = ({ route }) => {
           onPress={() => (navigation as any).goBack()}
           style={styles.headerBack}
         >
-          <Icon name="chevron-left" size={24} color={Colors.text.primary} />
+          <Icon name="chevron-left" size={24} color={Colors.text.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Quizlet</Text>
         <View style={styles.headerRight} />
@@ -82,10 +82,11 @@ const QuizletScreen: React.FC<any> = ({ route }) => {
         ) : (
           <>
             <TouchableOpacity
-              activeOpacity={0.9}
+              activeOpacity={0.95}
               style={styles.card}
               onPress={() => setShowAnswer(s => !s)}
             >
+              <View style={styles.accent} />
               <View style={styles.qRow}>
                 <Text style={styles.question} numberOfLines={6}>
                   {showAnswer
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary.main,
   },
   headerBack: { position: 'absolute', left: 12, top: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: Colors.text.primary },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: Colors.text.white },
   headerRight: { position: 'absolute', right: 12, top: 12 },
   // center content vertically and horizontally
   content: {
@@ -223,4 +224,14 @@ const styles = StyleSheet.create({
   navButtonText: { color: Colors.text.white, fontWeight: '700' },
   navButtonTextDisabled: { color: Colors.text.secondary },
   progressText: { color: Colors.text.secondary, fontWeight: '700' },
+  accent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 8,
+    backgroundColor: Colors.secondary.indigo,
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+  },
 });
