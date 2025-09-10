@@ -149,7 +149,7 @@ const Study: React.FC = () => {
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.panelTitle}>Study with flashcards</Text>
             <TouchableOpacity>
-              <Text style={styles.seeAll}>Xem tất cả</Text>
+              <Text style={styles.seeAll}>Show all</Text>
             </TouchableOpacity>
           </View>
 
@@ -171,17 +171,53 @@ const Study: React.FC = () => {
                     { width: Math.min(280, width * 0.7) },
                   ]}
                 >
-                  <Text style={styles.quizletTitle}>
-                    Bộ câu hỏi - Bài {item.lesson_id}
-                  </Text>
-                  <Text style={styles.quizletMeta}>by Thầy Trọng</Text>
-                  <Text style={styles.quizletMeta}>{item.cards} cards</Text>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.quizletTitle}>
+                      Quizlet for Lesson {item.lesson_id}
+                    </Text>
+                  </View>
+
+                  <View style={styles.cardMetaRow}>
+                    <View style={styles.metaItem}>
+                      <Icon
+                        name="account"
+                        size={14}
+                        color={Colors.text.secondary}
+                        style={styles.metaIcon}
+                      />
+                      <Text
+                        style={[
+                          styles.quizletMeta,
+                          { marginTop: 0, alignSelf: 'center' },
+                        ]}
+                      >
+                        by Mr Tech
+                      </Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <Icon
+                        name="cards"
+                        size={14}
+                        color={Colors.text.secondary}
+                        style={styles.metaIcon}
+                      />
+                      <Text
+                        style={[
+                          styles.quizletMeta,
+                          { marginTop: 0, alignSelf: 'center' },
+                        ]}
+                      >
+                        {item.cards} cards
+                      </Text>
+                    </View>
+                  </View>
+
                   <View style={styles.cardFooter}>
                     <TouchableOpacity
                       style={styles.startButton}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.startButtonText}>Làm bài</Text>
+                      <Text style={styles.startButtonText}>Let’s go</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.iconButton}
@@ -321,13 +357,43 @@ const styles = StyleSheet.create({
   carousel: { paddingVertical: 12 },
   quizletCard: {
     backgroundColor: Colors.background.primary,
-    borderRadius: 10,
-    padding: 12,
-    marginRight: 12,
-    // no outer border per request
+    borderRadius: 14,
+    padding: 16,
+    marginRight: 14,
+    minHeight: 140,
+    width: 260,
+    // shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    // elevation for Android
+    elevation: 4,
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
   },
-  quizletTitle: { fontWeight: '800', color: Colors.text.primary },
-  quizletMeta: { color: Colors.text.secondary, marginTop: 6 },
+  quizletTitle: {
+    fontWeight: '800',
+    color: Colors.text.primary,
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  quizletMeta: { color: Colors.text.secondary, marginTop: 6, fontSize: 13 },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    width: '100%',
+  },
+  cardIcon: { marginRight: 8, alignSelf: 'center' },
+  cardMetaRow: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  metaItem: { flexDirection: 'row', alignItems: 'center', width: '48%' },
+  metaIcon: { marginRight: 6, alignSelf: 'center' },
   cardFooter: {
     marginTop: 12,
     flexDirection: 'row',
