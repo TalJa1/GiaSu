@@ -10,11 +10,16 @@ import {
   FlatList,
   Dimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../constants/Colors';
 import { getAllQuizlets } from '../../apis/quizletApi';
-import { getAllLessons } from '../../apis/lessonApi';
+import {
+  getAllLessons,
+  createLessonTracking,
+  isLessonLearned,
+} from '../../apis/lessonApi';
 import { Quizlet } from '../../apis/models';
 import type { Lesson as LessonModel } from '../../apis/models';
 // Using custom view-based grouped bars (no external chart lib required for this widget)
@@ -53,8 +58,10 @@ export const Lesson: React.FC<LessonProps> = ({ lesson }) => {
         ) : null}
       </View>
 
-  <View style={{ marginTop: 12 }}>
-        <Text style={[styles.quizletMeta, { color: Colors.text.secondary }]}>Raw data:</Text>
+      <View style={{ marginTop: 12 }}>
+        <Text style={[styles.quizletMeta, { color: Colors.text.secondary }]}>
+          Raw data:
+        </Text>
         <Text style={[styles.quizletMeta, { fontSize: 12 }]} numberOfLines={6}>
           {JSON.stringify(lesson, null, 2)}
         </Text>
@@ -72,6 +79,8 @@ const Study: React.FC = () => {
   const [lessonLoading, setLessonLoading] = useState(false);
   const [lessonError, setLessonError] = useState<string | null>(null);
   const [showAllLessons, setShowAllLessons] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [learnedMap, setLearnedMap] = useState<Record<number, boolean>>({});
 
   // Fake user chart data (English names). score is 0-100, progress is 0-1
   const users = [
@@ -124,6 +133,59 @@ const Study: React.FC = () => {
       mounted = false;
     };
   }, []);
+
+  // load current user id from AsyncStorage
+  useEffect(() => {
+    let mounted = true;
+    const loadUser = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('user');
+        if (!mounted || !stored) return;
+        const parsed = JSON.parse(stored);
+        const id = parsed?.id ?? null;
+        if (id) setCurrentUserId(Number(id));
+      } catch (e) {
+        // ignore
+      }
+    };
+    loadUser();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // when lessons or currentUserId change, check learned state for visible lessons
+  useEffect(() => {
+    let mounted = true;
+    const loadLearned = async () => {
+      if (!currentUserId || lessons.length === 0) return;
+      try {
+        // check each lesson (could be optimized)
+        for (const l of lessons) {
+          if (!mounted) return;
+          const lid = Number(l.id ?? 0);
+          if (!lid) continue;
+          // skip if already known
+          if (learnedMap[lid] !== undefined) continue;
+          try {
+            const learned = await isLessonLearned(currentUserId, lid);
+            if (!mounted) return;
+            setLearnedMap(p => ({ ...p, [lid]: !!learned }));
+          } catch (e) {
+            // ignore per-item errors
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    loadLearned();
+    return () => {
+      mounted = false;
+    };
+    // learnedMap intentionally excluded to avoid re-checking already-resolved items
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserId, lessons]);
 
   // group quizlets by lesson_id to display sets
   const grouped = useMemo(() => {
@@ -216,7 +278,7 @@ const Study: React.FC = () => {
           </View>
         </View>
 
-  <View style={{ marginTop: 18 }}>
+        <View style={{ marginTop: 18 }}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.panelTitle}>Study with flashcards</Text>
           </View>
@@ -312,8 +374,13 @@ const Study: React.FC = () => {
         <View style={{ marginTop: 18 }}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.panelTitle}>Lessons</Text>
-            <TouchableOpacity onPress={() => setShowAllLessons(s => !s)} activeOpacity={0.8}>
-              <Text style={styles.seeAll}>{showAllLessons ? 'Show less' : 'Show all'}</Text>
+            <TouchableOpacity
+              onPress={() => setShowAllLessons(s => !s)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.seeAll}>
+                {showAllLessons ? 'Show less' : 'Show all'}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -333,23 +400,78 @@ const Study: React.FC = () => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.carousel}
               renderItem={({ item }) => (
-                <View style={[styles.lessonCard, { width: Math.min(320, width * 0.75) }]}>
+                <View
+                  style={[
+                    styles.lessonCard,
+                    { width: Math.min(320, width * 0.75) },
+                  ]}
+                >
                   <View style={styles.lessonHeader}>
                     <View style={styles.iconWrap}>
                       <Icon name="book" size={18} color={Colors.primary.main} />
                     </View>
-                    <Text style={styles.lessonTitle} numberOfLines={2}>{item.title ?? `Lesson ${item.id}`}</Text>
+                    <Text style={styles.lessonTitle} numberOfLines={2}>
+                      {item.title ?? `Lesson ${item.id}`}
+                    </Text>
                   </View>
 
-                  <Text style={styles.lessonDescription} numberOfLines={3}>{item.description ?? 'No description available.'}</Text>
+                  <Text style={styles.lessonDescription} numberOfLines={3}>
+                    {item.description ?? 'No description available.'}
+                  </Text>
 
                   <View style={{ width: '100%', marginTop: 12 }}>
                     <TouchableOpacity
-                      style={styles.learnButton}
+                      style={
+                        learnedMap?.[Number(item.id ?? 0)]
+                          ? [styles.learnButton, styles.learnedButton]
+                          : styles.learnButton
+                      }
                       activeOpacity={0.85}
-                      onPress={() => (navigation as any).navigate('LessonDetail', { lessonId: item.id })}
+                      onPress={async () => {
+                        const lid = Number(item.id ?? 0);
+                        const uid = currentUserId;
+                        const already = learnedMap?.[lid];
+                        if (!uid) {
+                          // no user, just navigate
+                          (navigation as any).navigate('LessonDetail', {
+                            lessonId: item.id,
+                          });
+                          return;
+                        }
+                        if (already) {
+                          // already learned; just navigate
+                          (navigation as any).navigate('LessonDetail', {
+                            lessonId: item.id,
+                          });
+                          return;
+                        }
+                        // create tracking then navigate
+                        try {
+                          await createLessonTracking({
+                            user_id: uid,
+                            lesson_id: lid,
+                            is_finished: false,
+                          });
+                          setLearnedMap(p => ({ ...p, [lid]: true }));
+                        } catch (e) {
+                          // ignore failures but still navigate
+                        }
+                        (navigation as any).navigate('LessonDetail', {
+                          lessonId: item.id,
+                        });
+                      }}
                     >
-                      <Text style={styles.learnButtonText}>Learn</Text>
+                      <Text
+                        style={
+                          learnedMap?.[Number(item.id ?? 0)]
+                            ? [styles.learnButtonText, styles.learnedButtonText]
+                            : styles.learnButtonText
+                        }
+                      >
+                        {learnedMap?.[Number(item.id ?? 0)]
+                          ? 'Learned'
+                          : 'Learn'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -555,8 +677,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 10,
   },
-  lessonTitle: { fontSize: 16, fontWeight: '800', color: Colors.text.primary, flex: 1 },
-  lessonDescription: { marginTop: 4, color: Colors.text.secondary, fontSize: 13 },
+  lessonTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.text.primary,
+    flex: 1,
+  },
+  lessonDescription: {
+    marginTop: 4,
+    color: Colors.text.secondary,
+    fontSize: 13,
+  },
   learnButton: {
     backgroundColor: Colors.primary.main,
     paddingVertical: 10,
@@ -565,4 +696,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   learnButtonText: { color: Colors.text.white, fontWeight: '800' },
+  learnedButton: { backgroundColor: Colors.status.success },
+  learnedButtonText: { color: Colors.text.white },
 });

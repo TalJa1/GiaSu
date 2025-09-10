@@ -144,10 +144,61 @@ export async function getAllLessons(skip = 0, limit = 100): Promise<Lesson[]> {
 
 export async function getLessonById(lessonId: number): Promise<Lesson | null> {
   try {
-  const response = await axiosClient.get(`/lessons/${lessonId}`);
+    const response = await axiosClient.get(`/lessons/${lessonId}`);
     const data = response.data;
     if (!data) return null;
     return (data as Lesson) ?? null;
+  } catch (err: any) {
+    if (err?.response) {
+      throw new Error(
+        `API Error ${err.response.status}: ${JSON.stringify(
+          err.response.data,
+        )}`,
+      );
+    }
+    if (err?.request) {
+      throw new Error(`Network Error: ${err.message || 'no response'}`);
+    }
+    throw new Error(err?.message ?? 'Unknown error');
+  }
+}
+
+export async function createLessonTracking(payload: {
+  user_id: number;
+  lesson_id: number;
+  is_finished?: boolean;
+}): Promise<any> {
+  try {
+    const response = await axiosClient.post('/lessons/tracking/', payload);
+    return response.data;
+  } catch (err: any) {
+    if (err?.response) {
+      throw new Error(
+        `API Error ${err.response.status}: ${JSON.stringify(
+          err.response.data,
+        )}`,
+      );
+    }
+    if (err?.request) {
+      throw new Error(`Network Error: ${err.message || 'no response'}`);
+    }
+    throw new Error(err?.message ?? 'Unknown error');
+  }
+}
+
+export async function isLessonLearned(
+  user_id: number,
+  lesson_id: number,
+): Promise<boolean | null> {
+  try {
+    const response = await axiosClient.get('/lessons/tracking/check', {
+      params: { user_id, lesson_id },
+    });
+    const data = response.data;
+    if (data && typeof data.isLearned === 'boolean') return data.isLearned;
+    // sometimes APIs return different shapes; try common boolean fallback
+    if (typeof data === 'boolean') return data;
+    return null;
   } catch (err: any) {
     if (err?.response) {
       throw new Error(
