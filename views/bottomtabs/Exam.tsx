@@ -197,20 +197,36 @@ const Exam = () => {
               {(expandedTests ? tests : tests.slice(0, 3)).map(
                 (t: TestItem) => (
                   <View key={t.id} style={styles.testCard}>
-                    <Text style={styles.testTitle}>{t.title}</Text>
-                    {t.description ? (
-                      <Text style={styles.testDescription}>
-                        {t.description}
-                      </Text>
-                    ) : null}
-                    <TouchableOpacity
-                      style={styles.testButton}
-                      onPress={() =>
-                        navigation.navigate('TestRunner', { test: t })
-                      }
-                    >
-                      <Text style={styles.testButtonText}>Let's test</Text>
-                    </TouchableOpacity>
+                    <View style={styles.testLeft}>
+                      <Text style={styles.testTitle}>{t.title}</Text>
+                      {t.description ? (
+                        <Text style={styles.testDescription}>
+                          {t.description}
+                        </Text>
+                      ) : null}
+                    </View>
+
+                    <View style={styles.testRight}>
+                      <View style={styles.durationWrap}>
+                        <Icon
+                          name="clock-outline"
+                          size={14}
+                          color={Colors.primary.main}
+                        />
+                        <Text style={styles.durationText}>
+                          {(t as any).duration ?? '30m'}
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.testButton}
+                        onPress={() =>
+                          navigation.navigate('TestRunner', { test: t })
+                        }
+                      >
+                        <Text style={styles.testButtonText}>Let's test</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 ),
               )}
@@ -342,7 +358,13 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
+  testLeft: { flex: 1, paddingRight: 8 },
+  testRight: { justifyContent: 'center', alignItems: 'flex-end' },
+  durationWrap: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  durationText: { marginLeft: 6, color: Colors.text.secondary, fontSize: 12 },
   testTitle: { fontSize: 14, fontWeight: '700', marginBottom: 6 },
   testDescription: {
     fontSize: 13,
@@ -354,7 +376,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 6,
-    alignSelf: 'flex-end',
+    // alignSelf removed; using layout to push button to the end
   },
   testButtonText: { color: Colors.text.white, fontWeight: '600' },
   toggleButton: { marginTop: 6, alignSelf: 'flex-start' },
