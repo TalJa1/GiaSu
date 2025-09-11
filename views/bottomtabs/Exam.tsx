@@ -249,7 +249,7 @@ const Exam = () => {
                       <TouchableOpacity
                         style={styles.testButton}
                         onPress={() =>
-                          navigation.navigate('TestRunner', { test: t })
+                          navigation.navigate('TestRunner', { testId: t.id })
                         }
                       >
                         <Text style={styles.testButtonText}>

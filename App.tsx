@@ -220,7 +220,7 @@ function App() {
           <Stack.Screen
             name="TestRunner"
             component={require('./views/TestRunner').default}
-            options={{ headerShown: true }}
+            options={{ headerShown: false }}
           />
           <Stack.Screen name="Universities" component={UniversitiesList} />
           <Stack.Screen name="Infor" component={Infor} />

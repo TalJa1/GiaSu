@@ -23,4 +23,25 @@ export async function getTests(): Promise<TestItem[]> {
   }
 }
 
-export default { getTests };
+export async function getTestById(testId: string | number): Promise<TestItem | null> {
+  try {
+    const response = await axiosClient.get(`/tests/${testId}`);
+    const data = response.data;
+    if (!data) return null;
+    return data as TestItem;
+  } catch (err: any) {
+    if (err?.response) {
+      throw new Error(
+        `API Error ${err.response.status}: ${JSON.stringify(
+          err.response.data,
+        )}`,
+      );
+    }
+    if (err?.request) {
+      throw new Error(`Network Error: ${err.message || 'no response'}`);
+    }
+    throw new Error(err?.message ?? 'Unknown error');
+  }
+}
+
+export default { getTests, getTestById };
