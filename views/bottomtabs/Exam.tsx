@@ -43,14 +43,16 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   header: {
-    backgroundColor: Colors.primary.main,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+  height: 56,
+  backgroundColor: Colors.primary.main,
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderBottomWidth: 1,
+  borderBottomColor: Colors.ui.border,
   },
   headerTitle: {
     color: Colors.text.white,
-    fontSize: 18,
-    fontWeight: '600',
+  fontSize: 18,
+  fontWeight: '700',
   },
 });

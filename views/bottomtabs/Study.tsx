@@ -181,7 +181,9 @@ const Study: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Study</Text>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Study</Text>
+      </View>
 
       <ScrollView
         style={styles.scrollView}
@@ -480,16 +482,14 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 12,
-    color: Colors.text.white,
+    height: 56,
     backgroundColor: Colors.primary.main,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    alignSelf: 'stretch',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.ui.border,
   },
+  headerTitle: { color: Colors.text.white, fontWeight: '700', fontSize: 18 },
   panel: {
     backgroundColor: Colors.background.primary,
     borderRadius: 12,
