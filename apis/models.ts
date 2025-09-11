@@ -147,3 +147,28 @@ export type TestItem = {
   supports_multiple_answers?: boolean;
   questions?: TestQuestion[];
 };
+
+export type UserProgress = {
+  user_id: number;
+  tests_taken: number;
+  total_tests: number;
+  percent: number;
+};
+
+export type ResultAnswer = {
+  question_id: number;
+  user_answer: string[] | string;
+  is_correct?: boolean;
+  partial_credit?: number;
+};
+
+export type CreateResultPayload = {
+  user_id: number;
+  test_id: number;
+  score: number;
+  total_questions: number;
+  correct_answers: number;
+  points_earned?: number;
+  points_possible?: number;
+  answers?: ResultAnswer[];
+};
