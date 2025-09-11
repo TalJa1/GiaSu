@@ -213,3 +213,30 @@ export async function isLessonLearned(
     throw new Error(err?.message ?? 'Unknown error');
   }
 }
+
+export async function getLessonsWithUserTracking(
+  user_id: number,
+): Promise<Array<Lesson & { isLearned?: boolean }>> {
+  try {
+    const response = await axiosClient.get(
+      `/lessons/tracking/user/${user_id}/lessons`,
+    );
+    const data = response.data;
+    if (!data) return [];
+    if (Array.isArray(data))
+      return data as Array<Lesson & { isLearned?: boolean }>;
+    return data.items ?? data.results ?? [];
+  } catch (err: any) {
+    if (err?.response) {
+      throw new Error(
+        `API Error ${err.response.status}: ${JSON.stringify(
+          err.response.data,
+        )}`,
+      );
+    }
+    if (err?.request) {
+      throw new Error(`Network Error: ${err.message || 'no response'}`);
+    }
+    throw new Error(err?.message ?? 'Unknown error');
+  }
+}

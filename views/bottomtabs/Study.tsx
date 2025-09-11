@@ -18,7 +18,7 @@ import { getAllQuizlets } from '../../apis/quizletApi';
 import {
   getAllLessons,
   createLessonTracking,
-  isLessonLearned,
+  getLessonsWithUserTracking,
 } from '../../apis/lessonApi';
 import { Quizlet } from '../../apis/models';
 import type { Lesson as LessonModel } from '../../apis/models';
@@ -80,7 +80,6 @@ const Study: React.FC = () => {
   const [lessonError, setLessonError] = useState<string | null>(null);
   const [showAllLessons, setShowAllLessons] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const [learnedMap, setLearnedMap] = useState<Record<number, boolean>>({});
 
   // Fake user chart data (English names). score is 0-100, progress is 0-1
   const users = [
@@ -110,15 +109,25 @@ const Study: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [currentUserId]);
 
   useEffect(() => {
     let mounted = true;
     const loadOneLesson = async () => {
       setLessonLoading(true);
       try {
-        // fetch multiple lessons (limit 50)
-        const items = await getAllLessons(0, 50);
+        // fetch multiple lessons (limit 50). If we have a current user, request lessons with tracking
+        let items: LessonModel[] = [];
+        if (currentUserId) {
+          try {
+            items = (await getLessonsWithUserTracking(currentUserId)) ?? [];
+          } catch (_e) {
+            // fallback to general lessons
+            items = (await getAllLessons(0, 50)) ?? [];
+          }
+        } else {
+          items = (await getAllLessons(0, 50)) ?? [];
+        }
         if (!mounted) return;
         setLessons(items ?? []);
       } catch (err: any) {
@@ -132,7 +141,7 @@ const Study: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [currentUserId]);
 
   // load current user id from AsyncStorage
   useEffect(() => {
@@ -154,38 +163,7 @@ const Study: React.FC = () => {
     };
   }, []);
 
-  // when lessons or currentUserId change, check learned state for visible lessons
-  useEffect(() => {
-    let mounted = true;
-    const loadLearned = async () => {
-      if (!currentUserId || lessons.length === 0) return;
-      try {
-        // check each lesson (could be optimized)
-        for (const l of lessons) {
-          if (!mounted) return;
-          const lid = Number(l.id ?? 0);
-          if (!lid) continue;
-          // skip if already known
-          if (learnedMap[lid] !== undefined) continue;
-          try {
-            const learned = await isLessonLearned(currentUserId, lid);
-            if (!mounted) return;
-            setLearnedMap(p => ({ ...p, [lid]: !!learned }));
-          } catch (e) {
-            // ignore per-item errors
-          }
-        }
-      } catch (e) {
-        // ignore
-      }
-    };
-    loadLearned();
-    return () => {
-      mounted = false;
-    };
-    // learnedMap intentionally excluded to avoid re-checking already-resolved items
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUserId, lessons]);
+  // NOTE: we now prefer `getLessonsWithUserTracking` which returns an `isLearned` flag
 
   // group quizlets by lesson_id to display sets
   const grouped = useMemo(() => {
@@ -422,7 +400,7 @@ const Study: React.FC = () => {
                   <View style={{ width: '100%', marginTop: 12 }}>
                     <TouchableOpacity
                       style={
-                        learnedMap?.[Number(item.id ?? 0)]
+                        item?.isLearned
                           ? [styles.learnButton, styles.learnedButton]
                           : styles.learnButton
                       }
@@ -430,7 +408,7 @@ const Study: React.FC = () => {
                       onPress={async () => {
                         const lid = Number(item.id ?? 0);
                         const uid = currentUserId;
-                        const already = learnedMap?.[lid];
+                        const already = !!item?.isLearned;
                         if (!uid) {
                           // no user, just navigate
                           (navigation as any).navigate('LessonDetail', {
@@ -452,7 +430,12 @@ const Study: React.FC = () => {
                             lesson_id: lid,
                             is_finished: false,
                           });
-                          setLearnedMap(p => ({ ...p, [lid]: true }));
+                          // update local lessons array to mark this lesson as learned
+                          setLessons(prev =>
+                            prev.map(s =>
+                              s.id === lid ? { ...s, isLearned: true } : s,
+                            ),
+                          );
                         } catch (e) {
                           // ignore failures but still navigate
                         }
@@ -463,14 +446,12 @@ const Study: React.FC = () => {
                     >
                       <Text
                         style={
-                          learnedMap?.[Number(item.id ?? 0)]
+                          item?.isLearned
                             ? [styles.learnButtonText, styles.learnedButtonText]
                             : styles.learnButtonText
                         }
                       >
-                        {learnedMap?.[Number(item.id ?? 0)]
-                          ? 'Learned'
-                          : 'Learn'}
+                        {item?.isLearned ? 'Learned' : 'Learn'}
                       </Text>
                     </TouchableOpacity>
                   </View>
