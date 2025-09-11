@@ -43,4 +43,25 @@ export async function createResult(payload: CreateResultPayload): Promise<any> {
   }
 }
 
-export default { getUserProgress, createResult };
+export async function getResultHistory(result_id: number): Promise<any | null> {
+  try {
+    const response = await axiosClient.get(`/results/${result_id}`);
+    const data = response.data;
+    if (!data) return null;
+    return data;
+  } catch (err: any) {
+    if (err?.response) {
+      throw new Error(
+        `API Error ${err.response.status}: ${JSON.stringify(
+          err.response.data,
+        )}`,
+      );
+    }
+    if (err?.request) {
+      throw new Error(`Network Error: ${err.message || 'no response'}`);
+    }
+    throw new Error(err?.message ?? 'Unknown error');
+  }
+}
+
+export default { getUserProgress, createResult, getResultHistory };
