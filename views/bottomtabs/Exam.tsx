@@ -9,10 +9,14 @@ import {
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/Colors';
+import { TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import testResultApi from '../../apis/testResultApi';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import testApi from '../../apis/testApi';
+import { TestItem } from '../../apis/models';
 
 const Exam = () => {
   const [loadingProgress, setLoadingProgress] = useState(false);
@@ -42,6 +46,33 @@ const Exam = () => {
         if (mounted) setProgressData(null);
       } finally {
         if (mounted) setLoadingProgress(false);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const navigation = useNavigation<any>();
+
+  const [tests, setTests] = useState<TestItem[]>([]);
+  const [loadingTests, setLoadingTests] = useState(false);
+  const [expandedTests, setExpandedTests] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoadingTests(true);
+      try {
+        const items = await testApi.getTests();
+        if (!mounted) return;
+        setTests(items);
+      } catch (e) {
+        if (!mounted) return;
+        setTests([]);
+      } finally {
+        if (mounted) setLoadingTests(false);
       }
     };
     load();
@@ -139,6 +170,52 @@ const Exam = () => {
               )}
             </View>
           </View>
+        </View>
+
+        {/* Tests list rendered under the chart container */}
+        <View style={styles.testsSection}>
+          <View style={styles.testsHeader}>
+            <Text style={styles.sectionTitle}>Notable Tests</Text>
+            {tests.length > 3 && (
+              <TouchableOpacity
+                style={styles.toggleButton}
+                onPress={() => setExpandedTests(s => !s)}
+              >
+                <Text style={styles.toggleText}>
+                  {expandedTests ? 'Show less' : 'Show more'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {/** Render tests as simple cards with title, description and a button */}
+          {loadingTests ? (
+            <ActivityIndicator />
+          ) : tests.length === 0 ? (
+            <Text style={{ color: Colors.text.secondary }}>No tests found</Text>
+          ) : (
+            <>
+              {(expandedTests ? tests : tests.slice(0, 3)).map(
+                (t: TestItem) => (
+                  <View key={t.id} style={styles.testCard}>
+                    <Text style={styles.testTitle}>{t.title}</Text>
+                    {t.description ? (
+                      <Text style={styles.testDescription}>
+                        {t.description}
+                      </Text>
+                    ) : null}
+                    <TouchableOpacity
+                      style={styles.testButton}
+                      onPress={() =>
+                        navigation.navigate('TestRunner', { test: t })
+                      }
+                    >
+                      <Text style={styles.testButtonText}>Let's test</Text>
+                    </TouchableOpacity>
+                  </View>
+                ),
+              )}
+            </>
+          )}
         </View>
 
         {/* Add your exam content here - tests, quizzes, practice exams, etc. */}
@@ -252,4 +329,34 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   infoTextWrap: { flex: 1 },
+  testsSection: { marginTop: 18 },
+  testsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
+  testCard: {
+    backgroundColor: Colors.background.primary,
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  testTitle: { fontSize: 14, fontWeight: '700', marginBottom: 6 },
+  testDescription: {
+    fontSize: 13,
+    color: Colors.text.secondary,
+    marginBottom: 8,
+  },
+  testButton: {
+    backgroundColor: Colors.primary.main,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-end',
+  },
+  testButtonText: { color: Colors.text.white, fontWeight: '600' },
+  toggleButton: { marginTop: 6, alignSelf: 'flex-start' },
+  toggleText: { color: Colors.primary.main, fontWeight: '600' },
 });

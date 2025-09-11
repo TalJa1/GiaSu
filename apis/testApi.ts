@@ -3,7 +3,7 @@ import { TestItem } from './models';
 
 export async function getTests(): Promise<TestItem[]> {
   try {
-    const response = await axiosClient.get('/api/v1/tests/');
+    const response = await axiosClient.get('/tests/');
     const data = response.data;
     if (!data) return [];
     if (Array.isArray(data)) return data as TestItem[];
