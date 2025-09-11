@@ -64,93 +64,80 @@ const Exam = () => {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.progressPanel}>
-          <View style={styles.chartWrapper}>
-            {loadingProgress ? (
-              <ActivityIndicator />
-            ) : progressData ? (
-              <View style={styles.chartCard}>
-                <AnimatedCircularProgress
-                  size={96}
-                  width={10}
-                  fill={progressData.percent ?? 0}
-                  tintColor={Colors.primary.main}
-                  backgroundColor={Colors.ui.divider}
-                >
-                  {() => (
-                    <View style={styles.circleInner}>
-                      <Text style={styles.circlePercent}>{`${Math.round(
+        <View style={styles.groupContainer}>
+          <View style={styles.progressPanel}>
+            <View style={styles.chartWrapper}>
+              {loadingProgress ? (
+                <ActivityIndicator />
+              ) : progressData ? (
+                <View style={styles.chartCard}>
+                  <AnimatedCircularProgress
+                    size={96}
+                    width={10}
+                    fill={progressData.percent ?? 0}
+                    tintColor={Colors.primary.main}
+                    backgroundColor={Colors.ui.divider}
+                  >
+                    {() => (
+                      <View style={styles.circleInner}>
+                        <Text style={styles.circlePercent}>{`${Math.round(
+                          progressData.percent ?? 0,
+                        )}%`}</Text>
+                      </View>
+                    )}
+                  </AnimatedCircularProgress>
+                </View>
+              ) : (
+                <View style={styles.emptyChart}>
+                  <Text style={{ color: Colors.text.secondary }}>
+                    No data available
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.infoColumn}>
+              {loadingProgress ? (
+                <Text style={styles.infoLabel}>Loading…</Text>
+              ) : progressData ? (
+                <>
+                  <View style={styles.infoCard}>
+                    <View style={styles.iconWrapSmall}>
+                      <Icon
+                        name="book-open-page-variant"
+                        size={18}
+                        color={Colors.primary.main}
+                      />
+                    </View>
+                    <View style={styles.infoTextWrap}>
+                      <Text style={styles.infoLabel}>Tests completed</Text>
+                      <Text style={styles.infoValue}>
+                        {progressData.tests_taken ?? 0}/
+                        {progressData.total_tests ?? 0}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.infoCard}>
+                    <View style={styles.iconWrapSmall}>
+                      <Icon
+                        name="chart-donut"
+                        size={18}
+                        color={Colors.primary.main}
+                      />
+                    </View>
+                    <View style={styles.infoTextWrap}>
+                      <Text style={styles.infoLabel}>Average score</Text>
+                      <Text style={styles.infoValue}>{`${Math.round(
                         progressData.percent ?? 0,
                       )}%`}</Text>
                     </View>
-                  )}
-                </AnimatedCircularProgress>
-              </View>
-            ) : (
-              <View style={styles.emptyChart}>
-                <Text style={{ color: Colors.text.secondary }}>
-                  Không có dữ liệu
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.infoColumn}>
-            {loadingProgress ? (
-              <Text style={styles.infoLabel}>Loading…</Text>
-            ) : progressData ? (
-              <>
-                <View style={styles.infoCard}>
-                  <View style={styles.iconWrapSmall}>
-                    <Icon
-                      name="book-open-page-variant"
-                      size={18}
-                      color={Colors.primary.main}
-                    />
                   </View>
-                  <View style={styles.infoTextWrap}>
-                    <Text style={styles.infoLabel}>Tổng số bài đã làm</Text>
-                    <Text style={styles.infoValue}>
-                      {progressData.tests_taken ?? 0}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.infoCard}>
-                  <View style={styles.iconWrapSmall}>
-                    <Icon
-                      name="format-list-bulleted"
-                      size={18}
-                      color={Colors.primary.main}
-                    />
-                  </View>
-                  <View style={styles.infoTextWrap}>
-                    <Text style={styles.infoLabel}>Tổng số bài</Text>
-                    <Text style={styles.infoValue}>
-                      {progressData.total_tests ?? 0}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.infoCard}>
-                  <View style={styles.iconWrapSmall}>
-                    <Icon
-                      name="chart-donut"
-                      size={18}
-                      color={Colors.primary.main}
-                    />
-                  </View>
-                  <View style={styles.infoTextWrap}>
-                    <Text style={styles.infoLabel}>Điểm trung bình</Text>
-                    <Text style={styles.infoValue}>{`${Math.round(
-                      progressData.percent ?? 0,
-                    )}%`}</Text>
-                  </View>
-                </View>
-              </>
-            ) : (
-              <Text style={styles.infoLabel}>No progress available</Text>
-            )}
+                </>
+              ) : (
+                <Text style={styles.infoLabel}>No progress available</Text>
+              )}
+            </View>
           </View>
         </View>
 
@@ -202,6 +189,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
+  groupContainer: {
+    // single container shadow for the grouped elements
+    backgroundColor: Colors.background.primary,
+    borderRadius: 12,
+    padding: 0,
+    // shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+    marginBottom: 12,
+  },
   chartWrapper: { width: 140, alignItems: 'center', justifyContent: 'center' },
   svgWrap: {
     width: 120,
@@ -225,12 +225,6 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    // shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
   },
   circleInner: { alignItems: 'center', justifyContent: 'center' },
   circlePercent: {
@@ -245,12 +239,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.primary,
     padding: 12,
     borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    marginBottom: 6,
+    // shadow removed; container holds the shadow now
   },
   iconWrapSmall: {
     width: 40,
