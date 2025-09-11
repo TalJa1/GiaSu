@@ -125,3 +125,25 @@ export type GetQuizletsOptions = {
   skip?: number;
   limit?: number;
 };
+
+export type TestQuestion = {
+  id: number;
+  question_text: string;
+  option_a?: string;
+  option_b?: string;
+  option_c?: string;
+  option_d?: string;
+  correct_options?: string[];
+  points?: number;
+  question_type?: string;
+};
+
+export type TestItem = {
+  id: number;
+  title: string;
+  description?: string;
+  created_by?: number;
+  created_at?: string;
+  supports_multiple_answers?: boolean;
+  questions?: TestQuestion[];
+};
