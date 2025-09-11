@@ -183,34 +183,39 @@ const Home = () => {
       ? Math.min(100, Math.round((lessonTrackedSafe / lessonTotalSafe) * 100))
       : 0;
 
-  const sampleCards = entries.length
-    ? entries
-    : [
-        {
-          id: '1',
-          date: '01/09/2025',
-          title: 'University Admission Scores 2025',
-          summary:
-            'Learn about the university admission scores for 2025, including key changes and specific requirements for each major.',
-          url: 'https://vietnamnet.vn/en/2025-university-scores-soar-in-key-majors-ministry-says-no-anomaly-2436061.html',
-        },
-        {
-          id: '2',
-          date: '02/09/2025',
-          title: 'Guide to Choosing a Major for Students',
-          summary:
-            'A detailed guide on how to choose a major based on personal interests and skills to maximize career opportunities in the future.',
-          url: 'https://www.bestcolleges.com/resources/choosing-a-major/',
-        },
-        {
-          id: '3',
-          date: '03/09/2025',
-          title: 'Scholarship Opportunities for Students in 2025',
-          summary:
-            'Explore international and domestic scholarship opportunities for students in 2025, including eligibility and application processes.',
-          url: 'https://www.scholars4dev.com/category/scholarships-list/',
-        },
-      ];
+  // Show API-provided entries only when they look like news items (have title/summary).
+  // Otherwise fall back to local sample cards.
+  const sampleCardsFallback = [
+    {
+      id: '1',
+      date: '01/09/2025',
+      title: 'University Admission Scores 2025',
+      summary:
+        'Learn about the university admission scores for 2025, including key changes and specific requirements for each major.',
+      url: 'https://vietnamnet.vn/en/2025-university-scores-soar-in-key-majors-ministry-says-no-anomaly-2436061.html',
+    },
+    {
+      id: '2',
+      date: '02/09/2025',
+      title: 'Guide to Choosing a Major for Students',
+      summary:
+        'A detailed guide on how to choose a major based on personal interests and skills to maximize career opportunities in the future.',
+      url: 'https://www.bestcolleges.com/resources/choosing-a-major/',
+    },
+    {
+      id: '3',
+      date: '03/09/2025',
+      title: 'Scholarship Opportunities for Students in 2025',
+      summary:
+        'Explore international and domestic scholarship opportunities for students in 2025, including eligibility and application processes.',
+      url: 'https://www.scholars4dev.com/category/scholarships-list/',
+    },
+  ];
+
+  const newsItems =
+    Array.isArray(entries) && entries.length > 0 && (entries[0] as any).title
+      ? entries
+      : sampleCardsFallback;
 
   // handleRefresh now reuses loadData
   const handleRefresh = () => loadData();
@@ -452,7 +457,7 @@ const Home = () => {
           style={styles.newsScroll}
           contentContainerStyle={styles.newsContainer}
         >
-          {sampleCards.map((c: any, idx: number) => (
+          {newsItems.map((c: any, idx: number) => (
             <View
               key={c.id ?? idx}
               style={[styles.newsCard, { width: Math.min(300, width * 0.75) }]}
@@ -488,7 +493,16 @@ const Home = () => {
                   </View>
                   <Text style={styles.newsDate}>{c.date}</Text>
                   <Text style={styles.newsSummary} numberOfLines={3}>
-                    {c.summary || 'No summary available'}
+                    {(() => {
+                      const raw = String(c.summary ?? '');
+                      // remove stray backslashes, collapse newlines and excess spaces
+                      const cleaned = raw
+                        .replace(/\\+/g, '')
+                        .replace(/\r?\n+/g, ' ')
+                        .replace(/\s{2,}/g, ' ')
+                        .trim();
+                      return cleaned || 'No summary available';
+                    })()}
                   </Text>
                 </View>
               </View>
