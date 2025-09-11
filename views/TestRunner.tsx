@@ -185,20 +185,8 @@ export default function TestRunner({ route, navigation }: Props) {
                 <View style={styles.questionHeader}>
                   <Text style={styles.questionTitle}>
                     Question {idx + 1}: {qq.question_text}
+                    <Text style={styles.typeText}>{` (${multiple ? 'multiple' : 'single'})`}</Text>
                   </Text>
-                </View>
-
-                <View style={styles.metaRow}>
-                  <View
-                    style={[
-                      styles.chip,
-                      multiple ? styles.chipMultiple : styles.chipSingle,
-                    ]}
-                  >
-                    <Text style={styles.chipText}>
-                      {multiple ? 'Multiple' : 'Single'}
-                    </Text>
-                  </View>
                 </View>
 
                 <View style={styles.optionsGrid}>
@@ -260,6 +248,9 @@ export default function TestRunner({ route, navigation }: Props) {
                     </View>
                   </View>
                 </View>
+
+                {/* type shown inline after question title; no separate chip rendered */}
+
               </View>
             );
           })}
@@ -324,6 +315,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#e0e0e0',
+    position: 'relative',
+    marginBottom: 12,
   },
   questionText: { fontSize: 16, fontWeight: '600' },
   questionsList: { marginTop: 12 },
@@ -336,50 +329,27 @@ const styles = StyleSheet.create({
   },
   questionTitle: { fontWeight: '700' },
   optionsGrid: { paddingTop: 6 },
-  optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  optionsColumn: { flex: 1 },
-  optionCell: { flex: 1, paddingHorizontal: 8 },
-  option: { marginTop: 8, color: Colors.text.primary },
+  optionsRow: { flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 8 },
+  typeText: { color: Colors.text.secondary, fontSize: 12 },
   questionsListContent: { paddingBottom: 24 },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  navButton: {
-    backgroundColor: Colors.primary.main,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
+  navButton: { backgroundColor: Colors.primary.main, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 8 },
   navText: { color: Colors.text.white, fontWeight: '600' },
   disabled: { opacity: 0.5 },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginBottom: 8,
-  },
-  chip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 24,
-    alignSelf: 'flex-start',
-  },
-  chipSingle: { backgroundColor: Colors.grades.excellent },
-  chipMultiple: { backgroundColor: Colors.grades.average },
-  chipText: { color: Colors.text.white, fontWeight: '600', fontSize: 12 },
+
+  // Option layout: two columns, each 50% of row
+  optionCell: { width: '50%', paddingHorizontal: 6 },
   optionButton: {
     padding: 10,
     borderRadius: 8,
     backgroundColor: 'transparent',
-  },
-  optionSelected: {
     borderWidth: 2,
-    borderColor: Colors.primary.main,
-    backgroundColor: Colors.background.primary,
+    borderColor: 'transparent',
+    minHeight: 56,
+    justifyContent: 'center',
+    width: '100%',
+    alignItems: 'flex-start',
   },
+  option: { color: Colors.text.primary },
+  optionSelected: { borderWidth: 2, borderColor: Colors.primary.main, backgroundColor: Colors.background.primary },
 });
