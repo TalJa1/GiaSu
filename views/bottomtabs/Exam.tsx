@@ -26,6 +26,7 @@ const Exam = () => {
     total_tests?: number;
     percent?: number;
   } | null>(null);
+  const [resultsHistory, setResultsHistory] = useState<any[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -86,7 +87,10 @@ const Exam = () => {
               const tid = r?.test_id ?? r?.test?.id ?? r?.testId ?? r?.testId;
               if (typeof tid === 'number') ids.add(tid);
             }
-            if (mounted) setCompletedTestIds(ids);
+            if (mounted) {
+              setCompletedTestIds(ids);
+              setResultsHistory(resultsArray);
+            }
           }
         } catch (err) {
           // ignore per-test result fetch errors
@@ -210,6 +214,7 @@ const Exam = () => {
               </TouchableOpacity>
             )}
           </View>
+        
 
           {loadingTests ? (
             <ActivityIndicator />
@@ -262,6 +267,41 @@ const Exam = () => {
         </View>
 
         {/* Add your exam content here - tests, quizzes, practice exams, etc. */}
+        
+        {/* History - horizontal list of completed tests (outside Notable Tests) */}
+        <View style={styles.historySection}>
+          <Text style={styles.sectionTitle}>History</Text>
+          {resultsHistory.length === 0 ? (
+            <Text style={styles.emptyText}>No history yet</Text>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.historyList}
+            >
+              {resultsHistory.map((r: any) => {
+                const tid = r?.test_id ?? r?.test?.id ?? r?.testId;
+                const testItem: TestItem | undefined = r?.test ?? tests.find(t => t.id === tid);
+                return (
+                  <View key={r.id ?? tid} style={styles.historyCard}>
+                    <Text style={styles.testTitle}>{testItem?.title ?? `Test ${tid}`}</Text>
+                    {testItem?.description ? (
+                      <Text style={styles.testDescription}>{testItem.description}</Text>
+                    ) : null}
+                    <View style={styles.durationWrap}>
+                      <Icon name="clock-outline" size={14} color={Colors.primary.main} />
+                      <Text style={styles.durationText}>{(r as any).duration ?? (testItem as any)?.duration ?? '30m'}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.testButton} onPress={() => navigation.navigate('TestRunner', { test: (testItem ?? ({ id: tid, title: (testItem as any)?.title ?? `Test ${tid}` } as any)) })}>
+                      <Text style={styles.testButtonText}>Let's test</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          )}
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -408,4 +448,14 @@ const styles = StyleSheet.create({
   testButtonText: { color: Colors.text.white, fontWeight: '600' },
   toggleButton: { marginTop: 6, alignSelf: 'flex-start' },
   toggleText: { color: Colors.primary.main, fontWeight: '600' },
+  historySection: { marginTop: 18 },
+  historyList: { paddingVertical: 6 },
+  historyCard: {
+    width: 200,
+    backgroundColor: Colors.background.primary,
+    padding: 12,
+    borderRadius: 10,
+    marginRight: 12,
+  },
+  emptyText: { color: Colors.text.secondary, marginTop: 6 },
 });
