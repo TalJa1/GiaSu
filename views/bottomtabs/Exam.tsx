@@ -58,6 +58,9 @@ const Exam = () => {
 
   const [tests, setTests] = useState<TestItem[]>([]);
   const [loadingTests, setLoadingTests] = useState(false);
+  const [completedTestIds, setCompletedTestIds] = useState<Set<number>>(
+    new Set(),
+  );
   const [expandedTests, setExpandedTests] = useState(false);
 
   useEffect(() => {
@@ -68,6 +71,26 @@ const Exam = () => {
         const items = await testApi.getTests();
         if (!mounted) return;
         setTests(items);
+        // try to load user's result history and derive completed tests
+        try {
+          const stored = await AsyncStorage.getItem('user');
+          const parsed = stored ? JSON.parse(stored) : null;
+          const uid = parsed?.id ?? parsed?.user_id ?? null;
+          if (uid) {
+            const resp = await testResultApi.getResultHistory(Number(uid));
+            const resultsArray = Array.isArray(resp)
+              ? resp
+              : resp?.items ?? resp?.results ?? [];
+            const ids = new Set<number>();
+            for (const r of resultsArray) {
+              const tid = r?.test_id ?? r?.test?.id ?? r?.testId ?? r?.testId;
+              if (typeof tid === 'number') ids.add(tid);
+            }
+            if (mounted) setCompletedTestIds(ids);
+          }
+        } catch (err) {
+          // ignore per-test result fetch errors
+        }
       } catch (e) {
         if (!mounted) return;
         setTests([]);
@@ -187,7 +210,7 @@ const Exam = () => {
               </TouchableOpacity>
             )}
           </View>
-          {/** Render tests as simple cards with title, description and a button */}
+
           {loadingTests ? (
             <ActivityIndicator />
           ) : tests.length === 0 ? (
@@ -224,7 +247,11 @@ const Exam = () => {
                           navigation.navigate('TestRunner', { test: t })
                         }
                       >
-                        <Text style={styles.testButtonText}>Let's test</Text>
+                        <Text style={styles.testButtonText}>
+                          {completedTestIds.has(t.id)
+                            ? 'Test again'
+                            : "Let's test"}
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   </View>
