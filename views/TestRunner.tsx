@@ -82,7 +82,6 @@ export default function TestRunner({ route, navigation }: Props) {
     };
   }, [routeTestId, test]);
 
-  const onCancel = () => navigation.goBack();
   const onFinish = () => navigation.goBack();
 
   const mins = Math.floor(secondsLeft / 60);
@@ -144,27 +143,18 @@ export default function TestRunner({ route, navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={onCancel}
-            style={styles.headerButtonSecondary}
-          >
-            <Icon name="close" size={20} color={Colors.text.primary} />
-          </TouchableOpacity>
-
-          <View style={styles.headerCenter}>
-            <View style={styles.timerChip}>
-              <Text style={styles.timerText}>{timeText}</Text>
+          <View style={styles.headerRow}>
+            <View style={styles.timerLeft}>
+              <View style={styles.timerChip}>
+                <Text style={styles.timerText}>{timeText}</Text>
+              </View>
             </View>
-          </View>
 
-          <TouchableOpacity
-            onPress={onFinish}
-            style={styles.headerButtonPrimary}
-          >
-            <Icon name="check" size={20} color={Colors.text.white} />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity onPress={onFinish} style={styles.headerButtonPrimary}>
+              <Icon name="send" size={18} color={Colors.text.white} />
+              <Text style={styles.submitText}>Submit</Text>
+            </TouchableOpacity>
+          </View>
 
         <View style={styles.headerContent}>
           <Text style={styles.title}>{test.title}</Text>
@@ -275,29 +265,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   headerCenter: { alignItems: 'center', justifyContent: 'center' },
-  timerText: { fontSize: 16, fontWeight: '700' },
+  timerText: { fontSize: 14, fontWeight: '700', color: Colors.text.primary },
   header: {
     padding: 12,
     backgroundColor: Colors.primary.main,
   },
   headerContent: { marginBottom: 12 },
   timerChip: {
-    backgroundColor: Colors.background.primary,
-    paddingHorizontal: 12,
+    backgroundColor: Colors.text.white,
+    paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 18,
     shadowColor: Colors.ui.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: Colors.text.white,
+    minWidth: 80,
+    alignItems: 'center',
   },
   headerButtonPrimary: {
-    padding: 8,
-    backgroundColor: Colors.primary.main,
-    borderRadius: 8,
+    paddingVertical: 8,
     paddingHorizontal: 12,
+    backgroundColor: Colors.secondary.indigo,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
+  submitText: { color: Colors.text.white, marginLeft: 8, fontWeight: '700' },
+  timerLeft: { alignItems: 'flex-start', flex: 1 },
   headerButtonSecondary: {
     padding: 8,
     backgroundColor: Colors.background.primary,
