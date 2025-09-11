@@ -7,6 +7,7 @@ import {
   TextInput,
   Image,
   Alert,
+  StatusBar,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -139,9 +140,11 @@ const Login = () => {
           console.log('Failed to store created user in AsyncStorage', sErr);
         }
 
-        Alert.alert('Welcome to GiaSu!', 'Your account has been created and added to our system.', [
-          { text: 'Continue', onPress: () => navigation.replace('Infor') },
-        ]);
+        Alert.alert(
+          'Welcome to GiaSu!',
+          'Your account has been created and added to our system.',
+          [{ text: 'Continue', onPress: () => navigation.replace('Infor') }],
+        );
       } catch (apiErr: any) {
         console.log('Backend error:', apiErr);
         Alert.alert('Error', 'Failed to complete login. Please try again.');
@@ -173,6 +176,10 @@ const Login = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={Colors.background.secondary}
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
