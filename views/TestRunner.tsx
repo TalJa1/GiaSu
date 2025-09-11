@@ -185,7 +185,9 @@ export default function TestRunner({ route, navigation }: Props) {
                 <View style={styles.questionHeader}>
                   <Text style={styles.questionTitle}>
                     Question {idx + 1}: {qq.question_text}
-                    <Text style={styles.typeText}>{` (${multiple ? 'multiple' : 'single'})`}</Text>
+                    <Text style={styles.typeText}>{` (${
+                      multiple ? 'multiple' : 'single'
+                    })`}</Text>
                   </Text>
                 </View>
 
@@ -250,7 +252,6 @@ export default function TestRunner({ route, navigation }: Props) {
                 </View>
 
                 {/* type shown inline after question title; no separate chip rendered */}
-
               </View>
             );
           })}
@@ -265,7 +266,6 @@ export default function TestRunner({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: Colors.background.secondary,
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -273,15 +273,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
   },
   headerCenter: { alignItems: 'center', justifyContent: 'center' },
   timerText: { fontSize: 16, fontWeight: '700' },
   header: {
-    marginBottom: 12,
     padding: 12,
-    backgroundColor: Colors.primary.light,
-    borderRadius: 10,
+    backgroundColor: Colors.primary.main,
   },
   headerContent: { marginBottom: 12 },
   timerChip: {
@@ -312,6 +309,7 @@ const styles = StyleSheet.create({
   questionCard: {
     backgroundColor: Colors.background.primary,
     padding: 14,
+    marginHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#e0e0e0',
@@ -329,11 +327,24 @@ const styles = StyleSheet.create({
   },
   questionTitle: { fontWeight: '700' },
   optionsGrid: { paddingTop: 6 },
-  optionsRow: { flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 8 },
+  optionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginBottom: 8,
+  },
   typeText: { color: Colors.text.secondary, fontSize: 12 },
   questionsListContent: { paddingBottom: 24 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
-  navButton: { backgroundColor: Colors.primary.main, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 8 },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  navButton: {
+    backgroundColor: Colors.primary.main,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
   navText: { color: Colors.text.white, fontWeight: '600' },
   disabled: { opacity: 0.5 },
 
@@ -351,5 +362,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   option: { color: Colors.text.primary },
-  optionSelected: { borderWidth: 2, borderColor: Colors.primary.main, backgroundColor: Colors.background.primary },
+  optionSelected: {
+    borderWidth: 2,
+    borderColor: Colors.primary.main,
+    backgroundColor: Colors.background.primary,
+  },
 });
