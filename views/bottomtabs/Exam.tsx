@@ -1,16 +1,20 @@
-import { StyleSheet, Text, ScrollView } from 'react-native';
+import { StyleSheet, Text, ScrollView, View } from 'react-native';
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Colors from '../../constants/Colors';
 
 const Exam = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Exam</Text>
+      </View>
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Kiểm Tra</Text>
+        {/* Exam content goes here */}
         {/* Add your exam content here - tests, quizzes, practice exams, etc. */}
       </ScrollView>
     </SafeAreaView>
@@ -22,7 +26,7 @@ export default Exam;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background.secondary,
   },
   scrollView: {
     flex: 1,
@@ -37,5 +41,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     color: '#333',
+  },
+  header: {
+    backgroundColor: Colors.primary.main,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    color: Colors.text.white,
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
