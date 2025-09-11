@@ -143,19 +143,6 @@ export default function TestRunner({ route, navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <View style={styles.timerLeft}>
-              <View style={styles.timerChip}>
-                <Text style={styles.timerText}>{timeText}</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity onPress={onFinish} style={styles.headerButtonPrimary}>
-              <Icon name="send" size={18} color={Colors.text.white} />
-              <Text style={styles.submitText}>Submit</Text>
-            </TouchableOpacity>
-          </View>
-
         <View style={styles.headerContent}>
           <Text style={styles.title}>{test.title}</Text>
           <Text style={styles.desc}>{test.description}</Text>
@@ -249,6 +236,26 @@ export default function TestRunner({ route, navigation }: Props) {
       ) : (
         <Text>No questions in this test</Text>
       )}
+
+      {/* Footer bar with timer on left and submit on right */}
+      <View style={styles.footerBar}>
+        <View style={styles.footerLeft}>
+          <Icon name="clock-outline" size={18} color={Colors.primary.main} />
+          <View style={styles.footerTimer}>
+            <Text style={styles.footerTimerText}>{timeText}</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity onPress={onFinish} style={styles.footerSubmit}>
+          <Text style={styles.footerSubmitText}>Submit</Text>
+          <Icon
+            name="send"
+            size={18}
+            color={Colors.text.white}
+            style={styles.footerIcon}
+          />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -272,19 +279,7 @@ const styles = StyleSheet.create({
   },
   headerContent: { marginBottom: 12 },
   timerChip: {
-    backgroundColor: Colors.text.white,
     paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 18,
-    shadowColor: Colors.ui.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 1,
-    borderWidth: 1,
-    borderColor: Colors.text.white,
-    minWidth: 80,
-    alignItems: 'center',
   },
   headerButtonPrimary: {
     paddingVertical: 8,
@@ -303,7 +298,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   title: { fontSize: 18, fontWeight: '700' },
-  desc: { color: Colors.text.secondary, marginTop: 6 },
+  desc: { color: Colors.text.white, marginTop: 6 },
   questionCard: {
     backgroundColor: Colors.background.primary,
     padding: 14,
@@ -331,7 +326,42 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   typeText: { color: Colors.text.secondary, fontSize: 12 },
-  questionsListContent: { paddingBottom: 24 },
+  questionsListContent: { paddingBottom: 120 },
+  footerBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 72,
+    backgroundColor: Colors.background.primary,
+    borderTopWidth: 1,
+    borderTopColor: Colors.ui.divider,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+  },
+  footerLeft: { flexDirection: 'row', alignItems: 'center' },
+  footerTimer: {
+    backgroundColor: Colors.background.secondary,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginLeft: 8,
+    borderWidth: 1,
+    borderColor: Colors.ui.divider,
+  },
+  footerTimerText: { fontWeight: '700', color: Colors.text.primary },
+  footerSubmit: {
+    backgroundColor: Colors.secondary.indigo,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  footerSubmitText: { color: Colors.text.white, fontWeight: '700' },
+  footerIcon: { marginLeft: 8 },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
