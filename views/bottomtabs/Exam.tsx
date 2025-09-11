@@ -1,4 +1,4 @@
-import { StyleSheet, Text, ScrollView, View } from 'react-native';
+import { StyleSheet, Text, ScrollView, View, StatusBar } from 'react-native';
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/Colors';
@@ -6,6 +6,7 @@ import Colors from '../../constants/Colors';
 const Exam = () => {
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.primary.main} />
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Exam</Text>
       </View>
