@@ -386,7 +386,7 @@ const Exam = () => {
                         })
                       }
                     >
-                      <Text style={styles.testButtonText}>Let's test</Text>
+                      <Text style={styles.testButtonText}>Check</Text>
                     </TouchableOpacity>
                   </View>
                 );
