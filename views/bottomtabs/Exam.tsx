@@ -385,7 +385,8 @@ const Exam = () => {
                       style={styles.testButton}
                       onPress={() =>
                         navigation.navigate('TestReview', {
-                          test: testItem ??
+                          test:
+                            testItem ??
                             ({
                               id: tid,
                               title: (testItem as any)?.title ?? `Test ${tid}`,
