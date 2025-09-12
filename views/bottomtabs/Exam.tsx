@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {
   StyleSheet,
   Text,
@@ -288,15 +289,21 @@ const Exam = () => {
                       </View>
 
                       <TouchableOpacity
-                        style={styles.testButton}
+                        style={[
+                          styles.testButton,
+                          {
+                            backgroundColor: completedTestIds.has(t.id)
+                              ? '#888'
+                              : Colors.primary.main,
+                          },
+                        ]}
+                        disabled={completedTestIds.has(t.id)}
                         onPress={() =>
                           navigation.navigate('TestRunner', { testId: t.id })
                         }
                       >
-                        <Text style={styles.testButtonText}>
-                          {completedTestIds.has(t.id)
-                            ? 'Test again'
-                            : "Let's test"}
+                        <Text style={[styles.testButtonText]}>
+                          {completedTestIds.has(t.id) ? 'Done' : "Let's test"}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -508,9 +515,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 6,
-    // alignSelf removed; using layout to push button to the end
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  testButtonText: { color: Colors.text.white, fontWeight: '600' },
+  testButtonText: {
+    color: Colors.text.white,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   toggleButton: { marginTop: 6, alignSelf: 'flex-start' },
   toggleText: { color: Colors.primary.main, fontWeight: '600' },
   historySection: { marginTop: 18 },
