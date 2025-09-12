@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import testResultApi from '../../apis/testResultApi';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import testApi from '../../apis/testApi';
 import { TestItem } from '../../apis/models';
 
@@ -134,6 +134,26 @@ const Exam = () => {
       // ignore
     }
   }, []);
+
+  // Reload data whenever the screen is focused so the widgets show immediately
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        // Only trigger if component is active
+        if (!active) return;
+        try {
+          await Promise.all([loadProgress(), loadTestsAndHistory()]);
+        } catch (e) {
+          // ignore errors here; loaders already handle internal errors
+        }
+      })();
+
+      return () => {
+        active = false;
+      };
+    }, [loadProgress, loadTestsAndHistory]),
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
