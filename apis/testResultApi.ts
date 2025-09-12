@@ -43,12 +43,16 @@ export async function createResult(payload: CreateResultPayload): Promise<any> {
   }
 }
 
-export async function getResultHistory(result_id: number): Promise<any | null> {
+export async function getResultHistory(user_id: number): Promise<any[] | null> {
   try {
-    const response = await axiosClient.get(`/results/${result_id}`);
+    const response = await axiosClient.get(`/results/user/${user_id}`);
     const data = response.data;
     if (!data) return null;
-    return data;
+    // Ensure we return an array when the API returns items inside an object
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.results)) return data.results;
+    return null;
   } catch (err: any) {
     if (err?.response) {
       throw new Error(

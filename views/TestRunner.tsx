@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
+  Alert,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
@@ -11,6 +12,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Colors from '../constants/Colors';
 import { TestItem, TestQuestion } from '../apis/models';
 import testApi from '../apis/testApi';
+import testResultApi from '../apis/testResultApi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type Props = NativeStackScreenProps<any, 'TestRunner'>;
@@ -25,6 +28,7 @@ export default function TestRunner({ route, navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
   // selections: map question id -> array of selected option keys (e.g. ['A','C'])
   const [selections, setSelections] = useState<Record<number, string[]>>({});
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   const questions = test?.questions ?? [];
 
@@ -83,6 +87,115 @@ export default function TestRunner({ route, navigation }: Props) {
   }, [routeTestId, test]);
 
   const onFinish = () => navigation.goBack();
+
+  // When submitting: calculate score, build payload, POST result, then finish or show error
+  const handleSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+
+    try {
+      // Build per-question answers and compute points
+      const answers: any[] = [];
+      let pointsPossible = 0;
+      let pointsEarned = 0;
+      let correctAnswersCount = 0;
+
+      for (const q of questions) {
+        const selected = selections[q.id] ?? [];
+        const correct = (q.correct_options ?? []).map((s: string) =>
+          String(s).toUpperCase(),
+        );
+        const selNormalized = selected.map(s => String(s).toUpperCase());
+        const qPoints = typeof q.points === 'number' ? q.points : 1;
+        pointsPossible += qPoints;
+
+        // helper: set equality
+        const setEq = (a: string[], b: string[]) => {
+          if (a.length !== b.length) return false;
+          const sa = [...a].sort();
+          const sb = [...b].sort();
+          return sa.every((v, i) => v === sb[i]);
+        };
+
+        let isCorrect = false;
+        let awarded = 0;
+
+        if (setEq(selNormalized, correct)) {
+          isCorrect = true;
+          awarded = qPoints;
+          correctAnswersCount += 1;
+        } else {
+          // partial credit: only if all selected options are subset of correct (no incorrect chosen)
+          if (selNormalized.length > 0) {
+            const hasIncorrect = selNormalized.some(s => !correct.includes(s));
+            if (!hasIncorrect && correct.length > 0) {
+              const matched = selNormalized.filter(s =>
+                correct.includes(s),
+              ).length;
+              awarded = Number(
+                ((matched / correct.length) * qPoints).toFixed(2),
+              );
+            }
+          }
+        }
+
+        pointsEarned += awarded;
+
+        answers.push({
+          question_id: q.id,
+          // backend expects a list for user_answer, always send an array
+          user_answer: selNormalized,
+          is_correct: isCorrect,
+          partial_credit: awarded,
+        });
+      }
+
+      // Score as percentage of points earned over possible (0-100)
+      const score =
+        pointsPossible > 0
+          ? Math.round((pointsEarned / pointsPossible) * 100)
+          : 0;
+
+      // Read current user id from AsyncStorage
+      const stored = await AsyncStorage.getItem('user');
+      const parsed = stored ? JSON.parse(stored) : null;
+      const uid = parsed?.id ?? parsed?.user_id ?? null;
+
+      if (!uid) {
+        Alert.alert('Error', 'No signed-in user found. Please log in.');
+        setSubmitting(false);
+        return;
+      }
+
+      const payload = {
+        user_id: Number(uid),
+        test_id: test?.id ?? 0,
+        score,
+        total_questions: questions.length,
+        correct_answers: correctAnswersCount,
+        points_earned: Number(
+          pointsEarned.toFixed ? pointsEarned.toFixed(2) : pointsEarned,
+        ),
+        points_possible: Number(
+          pointsPossible.toFixed ? pointsPossible.toFixed(2) : pointsPossible,
+        ),
+        answers,
+      };
+
+      console.log('Submitting test result payload:', payload);
+
+      // Call API
+      await testResultApi.createResult(payload as any);
+
+      // success -> finish
+      onFinish();
+    } catch (err: any) {
+      console.warn('Failed to submit result', err);
+      Alert.alert('Error', err?.message ?? 'Failed to submit test result');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const mins = Math.floor(secondsLeft / 60);
   const secs = secondsLeft % 60;
@@ -246,7 +359,7 @@ export default function TestRunner({ route, navigation }: Props) {
           </View>
         </View>
 
-        <TouchableOpacity onPress={onFinish} style={styles.footerSubmit}>
+        <TouchableOpacity onPress={handleSubmit} style={styles.footerSubmit}>
           <Text style={styles.footerSubmitText}>Submit</Text>
           <Icon
             name="send"

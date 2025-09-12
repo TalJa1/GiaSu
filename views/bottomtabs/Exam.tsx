@@ -6,7 +6,8 @@ import {
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Colors from '../../constants/Colors';
 import { TouchableOpacity } from 'react-native';
@@ -27,32 +28,25 @@ const Exam = () => {
     percent?: number;
   } | null>(null);
   const [resultsHistory, setResultsHistory] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      setLoadingProgress(true);
-      try {
-        const stored = await AsyncStorage.getItem('user');
-        const parsed = stored ? JSON.parse(stored) : null;
-        const uid = parsed?.id ?? parsed?.user_id ?? null;
-        if (!uid) {
-          if (mounted) setProgressData(null);
-          return;
-        }
-        const resp = await testResultApi.getUserProgress(Number(uid));
-        if (!mounted) return;
-        setProgressData(resp ?? null);
-      } catch (e) {
-        if (mounted) setProgressData(null);
-      } finally {
-        if (mounted) setLoadingProgress(false);
+  const loadProgress = useCallback(async () => {
+    setLoadingProgress(true);
+    try {
+      const stored = await AsyncStorage.getItem('user');
+      const parsed = stored ? JSON.parse(stored) : null;
+      const uid = parsed?.id ?? parsed?.user_id ?? null;
+      if (!uid) {
+        setProgressData(null);
+        return;
       }
-    };
-    load();
-    return () => {
-      mounted = false;
-    };
+      const resp = await testResultApi.getUserProgress(Number(uid));
+      setProgressData(resp ?? null);
+    } catch (e) {
+      setProgressData(null);
+    } finally {
+      setLoadingProgress(false);
+    }
   }, []);
 
   const navigation = useNavigation<any>();
@@ -79,12 +73,11 @@ const Exam = () => {
           const uid = parsed?.id ?? parsed?.user_id ?? null;
           if (uid) {
             const resp = await testResultApi.getResultHistory(Number(uid));
-            const resultsArray = Array.isArray(resp)
-              ? resp
-              : resp?.items ?? resp?.results ?? [];
+            const resultsArray: any[] = resp ?? [];
+
             const ids = new Set<number>();
             for (const r of resultsArray) {
-              const tid = r?.test_id ?? r?.test?.id ?? r?.testId ?? r?.testId;
+              const tid = r?.test_id ?? r?.test?.id ?? r?.testId;
               if (typeof tid === 'number') ids.add(tid);
             }
             if (mounted) {
@@ -108,6 +101,48 @@ const Exam = () => {
     };
   }, []);
 
+  const loadTestsAndHistory = useCallback(async () => {
+    // wrapper to refresh tests and result history; used by pull-to-refresh
+    setLoadingTests(true);
+    try {
+      const items = await testApi.getTests();
+      setTests(items);
+    } catch (e) {
+      setTests([]);
+    } finally {
+      setLoadingTests(false);
+    }
+
+    // load history and completed ids
+    try {
+      const stored = await AsyncStorage.getItem('user');
+      const parsed = stored ? JSON.parse(stored) : null;
+      const uid = parsed?.id ?? parsed?.user_id ?? null;
+      if (uid) {
+        const resp = await testResultApi.getResultHistory(Number(uid));
+        const resultsArray: any[] = resp ?? [];
+        const ids = new Set<number>();
+        for (const r of resultsArray) {
+          const tid = r?.test_id ?? r?.test?.id ?? r?.testId ?? r?.testId;
+          if (typeof tid === 'number') ids.add(tid);
+        }
+        setCompletedTestIds(ids);
+        setResultsHistory(resultsArray);
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([loadProgress(), loadTestsAndHistory()]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadProgress, loadTestsAndHistory]);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
@@ -121,6 +156,13 @@ const Exam = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary.main]}
+          />
+        }
       >
         <View style={styles.groupContainer}>
           <View style={styles.progressPanel}>
@@ -214,7 +256,6 @@ const Exam = () => {
               </TouchableOpacity>
             )}
           </View>
-        
 
           {loadingTests ? (
             <ActivityIndicator />
@@ -267,7 +308,7 @@ const Exam = () => {
         </View>
 
         {/* Add your exam content here - tests, quizzes, practice exams, etc. */}
-        
+
         {/* History - horizontal list of completed tests (outside Notable Tests) */}
         <View style={styles.historySection}>
           <Text style={styles.sectionTitle}>History</Text>
@@ -281,18 +322,43 @@ const Exam = () => {
             >
               {resultsHistory.map((r: any) => {
                 const tid = r?.test_id ?? r?.test?.id ?? r?.testId;
-                const testItem: TestItem | undefined = r?.test ?? tests.find(t => t.id === tid);
+                const testItem: TestItem | undefined =
+                  r?.test ?? tests.find(t => t.id === tid);
                 return (
                   <View key={r.id ?? tid} style={styles.historyCard}>
-                    <Text style={styles.testTitle}>{testItem?.title ?? `Test ${tid}`}</Text>
+                    <Text style={styles.testTitle}>
+                      {testItem?.title ?? `Test ${tid}`}
+                    </Text>
                     {testItem?.description ? (
-                      <Text style={styles.testDescription}>{testItem.description}</Text>
+                      <Text style={styles.testDescription}>
+                        {testItem.description}
+                      </Text>
                     ) : null}
                     <View style={styles.durationWrap}>
-                      <Icon name="clock-outline" size={14} color={Colors.primary.main} />
-                      <Text style={styles.durationText}>{(r as any).duration ?? (testItem as any)?.duration ?? '30m'}</Text>
+                      <Icon
+                        name="clock-outline"
+                        size={14}
+                        color={Colors.primary.main}
+                      />
+                      <Text style={styles.durationText}>
+                        {(r as any).duration ??
+                          (testItem as any)?.duration ??
+                          '30m'}
+                      </Text>
                     </View>
-                    <TouchableOpacity style={styles.testButton} onPress={() => navigation.navigate('TestRunner', { test: (testItem ?? ({ id: tid, title: (testItem as any)?.title ?? `Test ${tid}` } as any)) })}>
+                    <TouchableOpacity
+                      style={styles.testButton}
+                      onPress={() =>
+                        navigation.navigate('TestRunner', {
+                          test:
+                            testItem ??
+                            ({
+                              id: tid,
+                              title: (testItem as any)?.title ?? `Test ${tid}`,
+                            } as any),
+                        })
+                      }
+                    >
                       <Text style={styles.testButtonText}>Let's test</Text>
                     </TouchableOpacity>
                   </View>
@@ -301,7 +367,6 @@ const Exam = () => {
             </ScrollView>
           )}
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
