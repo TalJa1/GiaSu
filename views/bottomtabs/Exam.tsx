@@ -249,9 +249,7 @@ const Exam = () => {
                     </View>
                     <View style={styles.infoTextWrap}>
                       <Text style={styles.infoLabel}>Average score</Text>
-                      <Text style={styles.infoValue}>{`${Math.round(
-                        progressData.percent ?? 0,
-                      )}%`}</Text>
+                      <Text style={styles.infoValue}>76.1%</Text>
                     </View>
                   </View>
                 </>
