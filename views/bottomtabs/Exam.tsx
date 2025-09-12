@@ -290,7 +290,11 @@ const Exam = () => {
                     <View style={styles.testLeft}>
                       <Text style={styles.testTitle}>{t.title}</Text>
                       {t.description ? (
-                        <Text style={styles.testDescription}>
+                        <Text
+                          style={styles.testDescription}
+                          numberOfLines={2}
+                          ellipsizeMode="tail"
+                        >
                           {t.description}
                         </Text>
                       ) : null}
@@ -357,7 +361,11 @@ const Exam = () => {
                       {testItem?.title ?? `Test ${tid}`}
                     </Text>
                     {testItem?.description ? (
-                      <Text style={styles.testDescription}>
+                      <Text
+                        style={styles.testDescription}
+                        numberOfLines={2}
+                        ellipsizeMode="tail"
+                      >
                         {testItem.description}
                       </Text>
                     ) : null}
