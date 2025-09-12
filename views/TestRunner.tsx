@@ -29,6 +29,8 @@ export default function TestRunner({ route, navigation }: Props) {
   // selections: map question id -> array of selected option keys (e.g. ['A','C'])
   const [selections, setSelections] = useState<Record<number, string[]>>({});
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [loadingReveal, setLoadingReveal] = useState<boolean>(false);
+  const [revealedScore, setRevealedScore] = useState<number | null>(null);
 
   const questions = test?.questions ?? [];
 
@@ -86,115 +88,119 @@ export default function TestRunner({ route, navigation }: Props) {
     };
   }, [routeTestId, test]);
 
-  const onFinish = () => navigation.goBack();
+  // Compute score, submit to API and return score number.
+  const computeAndSubmit = async () => {
+    // Build per-question answers and compute points
+    const answers: any[] = [];
+    let pointsPossible = 0;
+    let pointsEarned = 0;
+    let correctAnswersCount = 0;
 
-  // When submitting: calculate score, build payload, POST result, then finish or show error
-  const handleSubmit = async () => {
-    if (submitting) return;
-    setSubmitting(true);
+    for (const q of questions) {
+      const selected = selections[q.id] ?? [];
+      const correct = (q.correct_options ?? []).map((s: string) =>
+        String(s).toUpperCase(),
+      );
+      const selNormalized = selected.map(s => String(s).toUpperCase());
+      const qPoints = typeof q.points === 'number' ? q.points : 1;
+      pointsPossible += qPoints;
 
-    try {
-      // Build per-question answers and compute points
-      const answers: any[] = [];
-      let pointsPossible = 0;
-      let pointsEarned = 0;
-      let correctAnswersCount = 0;
-
-      for (const q of questions) {
-        const selected = selections[q.id] ?? [];
-        const correct = (q.correct_options ?? []).map((s: string) =>
-          String(s).toUpperCase(),
-        );
-        const selNormalized = selected.map(s => String(s).toUpperCase());
-        const qPoints = typeof q.points === 'number' ? q.points : 1;
-        pointsPossible += qPoints;
-
-        // helper: set equality
-        const setEq = (a: string[], b: string[]) => {
-          if (a.length !== b.length) return false;
-          const sa = [...a].sort();
-          const sb = [...b].sort();
-          return sa.every((v, i) => v === sb[i]);
-        };
-
-        let isCorrect = false;
-        let awarded = 0;
-
-        if (setEq(selNormalized, correct)) {
-          isCorrect = true;
-          awarded = qPoints;
-          correctAnswersCount += 1;
-        } else {
-          // partial credit: only if all selected options are subset of correct (no incorrect chosen)
-          if (selNormalized.length > 0) {
-            const hasIncorrect = selNormalized.some(s => !correct.includes(s));
-            if (!hasIncorrect && correct.length > 0) {
-              const matched = selNormalized.filter(s =>
-                correct.includes(s),
-              ).length;
-              awarded = Number(
-                ((matched / correct.length) * qPoints).toFixed(2),
-              );
-            }
-          }
-        }
-
-        pointsEarned += awarded;
-
-        answers.push({
-          question_id: q.id,
-          // backend expects a list for user_answer, always send an array
-          user_answer: selNormalized,
-          is_correct: isCorrect,
-          partial_credit: awarded,
-        });
-      }
-
-      // Score as percentage of points earned over possible (0-100)
-      const score =
-        pointsPossible > 0
-          ? Math.round((pointsEarned / pointsPossible) * 100)
-          : 0;
-
-      // Read current user id from AsyncStorage
-      const stored = await AsyncStorage.getItem('user');
-      const parsed = stored ? JSON.parse(stored) : null;
-      const uid = parsed?.id ?? parsed?.user_id ?? null;
-
-      if (!uid) {
-        Alert.alert('Error', 'No signed-in user found. Please log in.');
-        setSubmitting(false);
-        return;
-      }
-
-      const payload = {
-        user_id: Number(uid),
-        test_id: test?.id ?? 0,
-        score,
-        total_questions: questions.length,
-        correct_answers: correctAnswersCount,
-        points_earned: Number(
-          pointsEarned.toFixed ? pointsEarned.toFixed(2) : pointsEarned,
-        ),
-        points_possible: Number(
-          pointsPossible.toFixed ? pointsPossible.toFixed(2) : pointsPossible,
-        ),
-        answers,
+      // helper: set equality
+      const setEq = (a: string[], b: string[]) => {
+        if (a.length !== b.length) return false;
+        const sa = [...a].sort();
+        const sb = [...b].sort();
+        return sa.every((v, i) => v === sb[i]);
       };
 
-      console.log('Submitting test result payload:', payload);
+      let isCorrect = false;
+      let awarded = 0;
 
-      // Call API
-      await testResultApi.createResult(payload as any);
+      if (setEq(selNormalized, correct)) {
+        isCorrect = true;
+        awarded = qPoints;
+        correctAnswersCount += 1;
+      } else {
+        // partial credit: only if all selected options are subset of correct (no incorrect chosen)
+        if (selNormalized.length > 0) {
+          const hasIncorrect = selNormalized.some(s => !correct.includes(s));
+          if (!hasIncorrect && correct.length > 0) {
+            const matched = selNormalized.filter(s =>
+              correct.includes(s),
+            ).length;
+            awarded = Number(((matched / correct.length) * qPoints).toFixed(2));
+          }
+        }
+      }
 
-      // success -> finish
-      onFinish();
-    } catch (err: any) {
-      console.warn('Failed to submit result', err);
-      Alert.alert('Error', err?.message ?? 'Failed to submit test result');
-    } finally {
-      setSubmitting(false);
+      pointsEarned += awarded;
+
+      answers.push({
+        question_id: q.id,
+        // backend expects a list for user_answer, always send an array
+        user_answer: selNormalized,
+        is_correct: isCorrect,
+        partial_credit: awarded,
+      });
     }
+
+    // Score as percentage of points earned over possible (0-100)
+    const score = pointsPossible > 0 ? Math.round((pointsEarned / pointsPossible) * 100) : 0;
+
+    // Read current user id from AsyncStorage
+    const stored = await AsyncStorage.getItem('user');
+    const parsed = stored ? JSON.parse(stored) : null;
+    const uid = parsed?.id ?? parsed?.user_id ?? null;
+
+    if (!uid) {
+      throw new Error('No signed-in user found. Please log in.');
+    }
+
+    const payload = {
+      user_id: Number(uid),
+      test_id: test?.id ?? 0,
+      score,
+      total_questions: questions.length,
+      correct_answers: correctAnswersCount,
+      points_earned: Number(pointsEarned.toFixed ? pointsEarned.toFixed(2) : pointsEarned),
+      points_possible: Number(pointsPossible.toFixed ? pointsPossible.toFixed(2) : pointsPossible),
+      answers,
+    };
+
+    // Call API
+    await testResultApi.createResult(payload as any);
+
+    return score;
+  };
+
+  // Top-level handler triggered by the Footer Submit button.
+  // Shows a confirmation dialog; if confirmed, compute+submit and then reveal score and show Finish button.
+  const onSubmitPress = () => {
+    if (loadingReveal || submitting) return;
+
+    Alert.alert('Are you sure?', 'Do you want to submit and reveal your score?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Yes',
+        onPress: async () => {
+          try {
+            setLoadingReveal(true);
+            setSubmitting(true);
+            const score = await computeAndSubmit();
+            // small delay to give the user a sense of loading
+            setTimeout(() => {
+              setRevealedScore(score);
+              setLoadingReveal(false);
+              setSubmitting(false);
+            }, 700);
+          } catch (err: any) {
+            setLoadingReveal(false);
+            setSubmitting(false);
+            Alert.alert('Error', err?.message ?? 'Failed to submit test result');
+          }
+        },
+      },
+    ]);
   };
 
   const mins = Math.floor(secondsLeft / 60);
@@ -214,6 +220,9 @@ export default function TestRunner({ route, navigation }: Props) {
   };
 
   const toggleSelection = (q: TestQuestion, key: string) => {
+    // if score has been revealed, do not allow changing selections
+    if (typeof revealedScore === 'number') return;
+
     setSelections(prev => {
       const cur = prev[q.id] ?? [];
       const multiple = isMultiple(q);
@@ -287,9 +296,11 @@ export default function TestRunner({ route, navigation }: Props) {
                       {qq.option_a ? (
                         <TouchableOpacity
                           onPress={() => toggleSelection(qq, 'A')}
+                          disabled={typeof revealedScore === 'number'}
                           style={[
                             styles.optionButton,
                             selected.includes('A') && styles.optionSelected,
+                            typeof revealedScore === 'number' && styles.disabledOption,
                           ]}
                         >
                           <Text style={styles.option}>A. {qq.option_a}</Text>
@@ -300,9 +311,11 @@ export default function TestRunner({ route, navigation }: Props) {
                       {qq.option_c ? (
                         <TouchableOpacity
                           onPress={() => toggleSelection(qq, 'C')}
+                          disabled={typeof revealedScore === 'number'}
                           style={[
                             styles.optionButton,
                             selected.includes('C') && styles.optionSelected,
+                            typeof revealedScore === 'number' && styles.disabledOption,
                           ]}
                         >
                           <Text style={styles.option}>C. {qq.option_c}</Text>
@@ -316,9 +329,11 @@ export default function TestRunner({ route, navigation }: Props) {
                       {qq.option_b ? (
                         <TouchableOpacity
                           onPress={() => toggleSelection(qq, 'B')}
+                          disabled={typeof revealedScore === 'number'}
                           style={[
                             styles.optionButton,
                             selected.includes('B') && styles.optionSelected,
+                            typeof revealedScore === 'number' && styles.disabledOption,
                           ]}
                         >
                           <Text style={styles.option}>B. {qq.option_b}</Text>
@@ -329,9 +344,11 @@ export default function TestRunner({ route, navigation }: Props) {
                       {qq.option_d ? (
                         <TouchableOpacity
                           onPress={() => toggleSelection(qq, 'D')}
+                          disabled={typeof revealedScore === 'number'}
                           style={[
                             styles.optionButton,
                             selected.includes('D') && styles.optionSelected,
+                            typeof revealedScore === 'number' && styles.disabledOption,
                           ]}
                         >
                           <Text style={styles.option}>D. {qq.option_d}</Text>
@@ -357,16 +374,31 @@ export default function TestRunner({ route, navigation }: Props) {
           <View style={styles.footerTimer}>
             <Text style={styles.footerTimerText}>{timeText}</Text>
           </View>
+          {typeof revealedScore === 'number' ? (
+            <View style={styles.scoreWrapSmall}>
+              <Icon name="check-circle-outline" size={16} color={Colors.primary.main} />
+              <Text style={[styles.scoreValueSmall, styles.scoreLabelSpacing]}>{`${revealedScore}%`}</Text>
+            </View>
+          ) : null}
         </View>
 
-        <TouchableOpacity onPress={handleSubmit} style={styles.footerSubmit}>
-          <Text style={styles.footerSubmitText}>Submit</Text>
-          <Icon
-            name="send"
-            size={18}
-            color={Colors.text.white}
-            style={styles.footerIcon}
-          />
+        <TouchableOpacity onPress={() => {
+          if (typeof revealedScore === 'number') return navigation.goBack();
+          onSubmitPress();
+        }} style={styles.footerSubmit} disabled={submitting || loadingReveal}>
+          {loadingReveal ? (
+            <ActivityIndicator color={Colors.text.white} />
+          ) : (
+            <>
+              <Text style={styles.footerSubmitText}>{typeof revealedScore === 'number' ? 'Finish' : 'Submit'}</Text>
+              <Icon
+                name="send"
+                size={18}
+                color={Colors.text.white}
+                style={styles.footerIcon}
+              />
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -508,4 +540,15 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary.main,
     backgroundColor: Colors.background.primary,
   },
+  scoreWrapSmall: {
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  scoreValueSmall: { color: Colors.text.primary, fontWeight: '700' },
+  scoreLabelSpacing: { marginLeft: 8 },
+  disabledOption: { opacity: 0.6 },
 });
