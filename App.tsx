@@ -222,6 +222,11 @@ function App() {
             component={require('./views/TestRunner').default}
             options={{ headerShown: false }}
           />
+          <Stack.Screen
+            name="TestReview"
+            component={require('./views/TestReview').default}
+            options={{ headerShown: false }}
+          />
           <Stack.Screen name="Universities" component={UniversitiesList} />
           <Stack.Screen name="Infor" component={Infor} />
         </Stack.Navigator>

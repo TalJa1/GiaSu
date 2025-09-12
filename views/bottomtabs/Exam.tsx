@@ -376,13 +376,14 @@ const Exam = () => {
                     <TouchableOpacity
                       style={styles.testButton}
                       onPress={() =>
-                        navigation.navigate('TestRunner', {
-                          test:
-                            testItem ??
+                        navigation.navigate('TestReview', {
+                          test: testItem ??
                             ({
                               id: tid,
                               title: (testItem as any)?.title ?? `Test ${tid}`,
                             } as any),
+                          // pass the full result object so TestReview can mark selected answers
+                          result: r,
                         })
                       }
                     >
