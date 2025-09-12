@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Colors from '../constants/Colors';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { TestItem, TestQuestion } from '../apis/models';
 import testApi from '../apis/testApi';
 
@@ -130,6 +131,8 @@ export default function TestReview({ route, navigation }: any) {
           <Text style={styles.title}>{test.title}</Text>
           <Text style={styles.desc}>{test.description}</Text>
         </View>
+
+        {/* score moved to footer */}
       </View>
 
       {questions && questions.length > 0 ? (
@@ -247,17 +250,36 @@ export default function TestReview({ route, navigation }: any) {
       )}
       {/* Footer with full-width Finish button */}
       <View style={styles.footerBar}>
-        <TouchableOpacity
-          style={styles.footerFinish}
-          onPress={handleFinish}
-          disabled={finishing}
-        >
-          {finishing ? (
-            <ActivityIndicator color={Colors.text.white} />
-          ) : (
-            <Text style={styles.footerFinishText}>Finish</Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.footerRow}>
+          <View style={styles.scoreColumn}>
+            {typeof result?.score === 'number' ? (
+              <View style={styles.scoreWrapFooter}>
+                <Icon
+                  name="check-circle-outline"
+                  size={20}
+                  color={Colors.primary.main}
+                />
+                <Text
+                  style={styles.scoreValueFooter}
+                >{`${result.score}%`}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={styles.finishColumn}>
+            <TouchableOpacity
+              style={styles.footerFinish}
+              onPress={handleFinish}
+              disabled={finishing}
+            >
+              {finishing ? (
+                <ActivityIndicator color={Colors.text.white} />
+              ) : (
+                <Text style={styles.footerFinishText}>Finish</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -321,4 +343,36 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   footerFinishText: { color: Colors.text.white, fontWeight: '700' },
+  scoreWrap: {
+    display: 'flex',
+    alignSelf: 'flex-end',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  scoreIcon: { marginRight: 6 },
+  scoreValue: { color: Colors.text.white, fontWeight: '700', fontSize: 14 },
+  footerRow: { flexDirection: 'row', alignItems: 'center' },
+  scoreColumn: { width: '15%', paddingRight: 8, alignItems: 'flex-end' },
+  scoreWrapFooter: {
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  scoreValueFooter: {
+    color: Colors.text.primary,
+    fontWeight: '700',
+    marginLeft: 6,
+  },
+  finishColumn: { width: '85%' },
 });
