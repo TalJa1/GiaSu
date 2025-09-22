@@ -1,24 +1,13 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '@env';
-import { Platform } from 'react-native';
 
 const ENV_BASE_URL = API_BASE_URL;
-const BASE_URL: string = (() => {
-  if (Platform.OS === 'android' && ENV_BASE_URL) {
-    if (ENV_BASE_URL.includes('127.0.0.1') || ENV_BASE_URL.includes('localhost')) {
-      return ENV_BASE_URL.replace('127.0.0.1', '10.0.2.2').replace('localhost', '10.0.2.2');
-    }
-  }
-  return ENV_BASE_URL;
-})();
-if (__DEV__) {
-  console.log('[axiosClient] using base URL:', BASE_URL);
-}
+
 
 // Create axios instance
 const axiosClient: AxiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: ENV_BASE_URL,
   // Increase timeout to allow long-running AI generation requests.
   // Set to 300000 ms (5 minutes). If you prefer unlimited, set to 0.
   timeout: 300000,
