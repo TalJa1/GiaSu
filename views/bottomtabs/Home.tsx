@@ -25,6 +25,7 @@ import {
 } from '../../apis/lessonApi';
 import { CreateUserResponse, TrackingEntry } from '../../apis/models';
 import { getUserPref } from '../../apis/userPreferencesApi';
+import testResultApi from '../../apis/testResultApi';
 import Colors from '../../constants/Colors';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
@@ -54,6 +55,11 @@ const Home = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [notifications, _setNotifications] = useState<string[]>([]);
   const [userPref, _setUserPref] = useState<any | null>(null);
+  const [meanScoreData, setMeanScoreData] = useState<{
+    user_id: number;
+    mean_score: number | null;
+    count: number;
+  } | null>(null);
   const [lessonTotal, setLessonTotal] = useState<number | null>(null);
   const [lessonTrackedCount, setLessonTrackedCount] = useState<number | null>(
     null,
@@ -154,6 +160,14 @@ const Home = () => {
       } catch (e) {
         console.log('failed to load lesson counts', e);
       }
+
+      // Load user's mean score (may override pref current score if available)
+      try {
+        const meanRes = await testResultApi.getUserMeanScore(userId);
+        if (meanRes) setMeanScoreData(meanRes);
+      } catch (e) {
+        console.log('failed to load user mean score', e);
+      }
     } catch (e) {
       console.log('loadData error', e);
     } finally {
@@ -167,13 +181,40 @@ const Home = () => {
     loadData({ showLoading: true });
   }, []);
 
-  // preference progress: treat expected as baseline (showed as 100%) and
-  // compute current as percent of expected
-  const prefExpected = userPref ? Number(userPref.expected_score) || 100 : 100;
-  const prefCurrent = userPref ? Number(userPref.current_score) || 0 : 0;
+  // Determine effective current score (percent values):
+  // - If pref values are on a 0-10 scale (e.g. 7) convert to percent by *10.
+  // - Same for expected: convert 0-10 -> percent by *10.
+  // - If mean score exists (count>0), compute combined = round((prefPercent + mean_score)/2)
+  // - Use combined (percent) as effective current.
+  const prefExpectedRaw = userPref
+    ? Number(userPref.expected_score) || 100
+    : 100;
+  const prefExpectedPercent =
+    prefExpectedRaw <= 10 ? prefExpectedRaw * 10 : prefExpectedRaw;
+
+  const prefCurrentRaw = userPref ? Number(userPref.current_score) || 0 : 0;
+  const prefCurrentPercent =
+    prefCurrentRaw <= 10 ? prefCurrentRaw * 10 : prefCurrentRaw;
+
+  let combinedScore: number | null = null;
+  let effectiveCurrentPercent = prefCurrentPercent;
+  if (
+    meanScoreData &&
+    meanScoreData.count > 0 &&
+    meanScoreData.mean_score != null
+  ) {
+    // mean_score is already treated as percentage (0-100)
+    const meanPercent = Number(meanScoreData.mean_score);
+    combinedScore = Math.round((prefCurrentPercent + meanPercent) / 2);
+    effectiveCurrentPercent = combinedScore;
+  }
+
   const prefPercent =
-    prefExpected > 0
-      ? Math.min(100, Math.round((prefCurrent / prefExpected) * 100))
+    prefExpectedPercent > 0
+      ? Math.min(
+          100,
+          Math.round((effectiveCurrentPercent / prefExpectedPercent) * 100),
+        )
       : 0;
 
   const lessonTotalSafe = lessonTotal && lessonTotal > 0 ? lessonTotal : 0;
@@ -376,7 +417,9 @@ const Home = () => {
         {userPref ? (
           <View style={styles.prefProgressCard}>
             <Text style={styles.itemSmall}>Goal Tracking</Text>
-            <Text style={styles.prefTitle}>{userPref.preferred_major}</Text>
+            <View style={styles.prefHeaderRow}>
+              <Text style={styles.prefTitle}>{userPref.preferred_major}</Text>
+            </View>
             <View style={styles.progressRow}>
               <View style={styles.progressBarBackground}>
                 <View
@@ -756,6 +799,14 @@ const styles = StyleSheet.create<any>({
     backgroundColor: Colors.primary.main,
   },
   progressText: { marginLeft: 8, color: Colors.text.secondary, minWidth: 80 },
+  prefHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  meanInfoWrap: { alignItems: 'flex-end' },
+  meanText: { fontSize: 12, color: Colors.text.secondary },
+  meanSubText: { fontSize: 11, color: Colors.text.placeholder },
   circleWrap: { alignItems: 'center', marginBottom: 16 },
   circleInner: { alignItems: 'center', justifyContent: 'center' },
   circlePercent: {
