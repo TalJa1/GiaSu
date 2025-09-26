@@ -4,6 +4,10 @@ import { API_BASE_URL } from '@env';
 
 const ENV_BASE_URL = API_BASE_URL;
 
+// Debug logging
+console.log('🌐 API Base URL:', ENV_BASE_URL);
+console.log('🔧 Environment check - __DEV__:', __DEV__);
+
 
 // Create axios instance
 const axiosClient: AxiosInstance = axios.create({

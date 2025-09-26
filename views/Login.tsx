@@ -30,7 +30,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
-  // Configure Google Sign-In
+  // Configure Google Sign-In and test API connectivity
   useEffect(() => {
     const configureGoogleSignIn = async () => {
       try {
@@ -52,7 +52,26 @@ const Login = () => {
       }
     };
 
+    const testApiConnectivity = async () => {
+      try {
+        console.log('🔍 Testing API connectivity...');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch('http://giasu.asfastapi.io.vn/api/v1/health', {
+          method: 'GET',
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('✅ API connectivity test successful:', response.status);
+      } catch (error) {
+        console.log('❌ API connectivity test failed:', error);
+      }
+    };
+
     configureGoogleSignIn();
+    testApiConnectivity();
   }, []);
 
   // Disabled login handlers - only Google Sign-In is functional
@@ -147,7 +166,28 @@ const Login = () => {
         );
       } catch (apiErr: any) {
         console.log('Backend error:', apiErr);
-        Alert.alert('Error', 'Failed to complete login. Please try again.');
+        console.log('Backend error details:', JSON.stringify(apiErr, null, 2));
+        
+        // More detailed error logging
+        if (apiErr.response) {
+          console.log('API Error Response:', apiErr.response.status, apiErr.response.data);
+          Alert.alert(
+            'API Error', 
+            `Server responded with error ${apiErr.response.status}: ${JSON.stringify(apiErr.response.data)}`
+          );
+        } else if (apiErr.request) {
+          console.log('Network Error - Request made but no response:', apiErr.request);
+          Alert.alert(
+            'Network Error', 
+            `Cannot reach server. Please check:\n\n1. Internet connection\n2. Server is running\n3. Firewall settings\n\nServer: ${apiErr.config?.baseURL || 'Unknown'}\n\nError: ${apiErr.message}`
+          );
+        } else {
+          console.log('Request setup error:', apiErr.message);
+          Alert.alert(
+            'Request Error', 
+            `Error setting up request: ${apiErr.message}`
+          );
+        }
       }
     } catch (error: any) {
       console.log('Google Sign-In error:', error);
