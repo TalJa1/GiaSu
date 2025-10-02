@@ -1,12 +1,23 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { API_BASE_URL } from '@env';
 
-const ENV_BASE_URL = API_BASE_URL;
+// Resolve base URL and adapt localhost/127.0.0.1 to Android emulator host (10.0.2.2)
+const rawBaseUrl = (API_BASE_URL || '').trim();
+let ENV_BASE_URL = rawBaseUrl;
 
-// Debug logging
-console.log('🌐 API Base URL:', ENV_BASE_URL);
-console.log('🔧 Environment check - __DEV__:', __DEV__);
+if (Platform.OS === 'android' && rawBaseUrl) {
+  // Replace common local hosts with emulator host so Android emulator reaches host machine
+  ENV_BASE_URL = rawBaseUrl
+    .replace('localhost', '10.0.2.2')
+    .replace('127.0.0.1', '10.0.2.2');
+}
+
+// Debug logging - show raw and resolved base URLs
+console.log('🌐 Raw API Base URL:', rawBaseUrl);
+console.log('🌐 Resolved API Base URL (used by axios):', ENV_BASE_URL);
+console.log('🔧 Environment check - __DEV__:', __DEV__, 'Platform:', Platform.OS);
 
 
 // Create axios instance

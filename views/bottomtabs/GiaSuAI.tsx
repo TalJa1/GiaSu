@@ -38,15 +38,11 @@ const GiaSuAI: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const flatRef = useRef<FlatList>(null);
+  const flatRef = useRef<FlatList<Message> | null>(null);
 
+  // rely on onContentSizeChange to keep list scrolled to bottom reliably
   useEffect(() => {
-    // scroll to bottom when messages change
-    if (flatRef.current && messages.length > 0) {
-      setTimeout(() => {
-        flatRef.current?.scrollToEnd({ animated: true } as any);
-      }, 50);
-    }
+    // nothing required here - onContentSizeChange handles auto-scroll.
   }, [messages]);
 
   const sendMessage = () => {
@@ -127,13 +123,17 @@ const GiaSuAI: React.FC = () => {
           <Text style={styles.headerTitle}>GiaSu AI</Text>
         </View>
 
-        <FlatList
+        <FlatList<Message>
           ref={flatRef}
           data={messages}
           renderItem={renderItem}
-          keyExtractor={m => m.id}
+          keyExtractor={(m) => m.id}
           contentContainerStyle={styles.messagesContainer}
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => {
+            // scroll to bottom whenever content size changes
+            setTimeout(() => flatRef.current?.scrollToEnd?.({ animated: true } as any), 20);
+          }}
         />
 
         <View style={styles.inputRow}>
@@ -144,6 +144,15 @@ const GiaSuAI: React.FC = () => {
             onChangeText={setInput}
             style={styles.input}
             multiline
+            returnKeyType="send"
+            onSubmitEditing={() => {
+              // submit on Enter when not adding new line
+              if (!input.trim()) return;
+              sendMessage();
+            }}
+            blurOnSubmit={false}
+            autoCorrect={true}
+            accessibilityLabel="AI input"
           />
           <TouchableOpacity
             style={[

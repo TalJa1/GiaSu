@@ -9,44 +9,67 @@ import {
 export async function generateText(
   payload: AIGenerateRequest,
 ): Promise<AIGenerateResponse> {
-  try {
-    const res = await axiosClient.post('/ai/generate', payload);
-    // Some backends may return the text in different shapes. Try to normalize.
-    const data = res?.data ?? {};
-    // Common shapes: { output: 'text' } or { output: { text: '...' } } or { raw: {...} }
-    if (typeof data === 'string') return { output: data };
-    if (data?.output && typeof data.output === 'string')
-      return { output: data.output, raw: data };
-    if (
-      data?.output &&
-      typeof data.output === 'object' &&
-      typeof data.output.text === 'string'
-    )
-      return { output: data.output.text, raw: data };
-    // try provider-specific fields
-    if (data?.choices && Array.isArray(data.choices) && data.choices[0]?.text)
-      return { output: data.choices[0].text, raw: data };
+  const MAX_RETRIES = 2;
+  let attempt = 0;
 
-    // fallback: try to stringify a likely field
-    const possibleText = data?.text || data?.result || data?.message;
-    if (typeof possibleText === 'string')
-      return { output: possibleText, raw: data };
+  const normalize = (data: any): AIGenerateResponse => {
+    if (!data) return { raw: data };
+    if (typeof data === 'string') return { output: data, raw: data };
+    // try common shapes
+    if (data?.output && typeof data.output === 'string')
+      return { output: data.output, raw: data, model: data.model };
+    if (data?.output && typeof data.output === 'object' && typeof data.output.text === 'string')
+      return { output: data.output.text, raw: data, model: data.model };
+    if (data?.choices && Array.isArray(data.choices)) {
+      // OpenAI-like response
+      const first = data.choices[0];
+      if (typeof first?.text === 'string') return { output: first.text, raw: data, model: data.model || data.model_name };
+      if (typeof first?.message?.content === 'string') return { output: first.message.content, raw: data, model: data.model || data.model_name };
+    }
+    if (typeof data?.text === 'string') return { output: data.text, raw: data, model: data.model };
+    if (typeof data?.result === 'string') return { output: data.result, raw: data, model: data.model };
 
     return { raw: data };
-  } catch (err: any) {
-    // normalize error like other apis in the repo
-    if (err?.response) {
-      const status = err.response.status;
-      const data = err.response.data;
-      throw new Error(`API Error ${status}: ${JSON.stringify(data)}`);
+  };
+
+  while (attempt <= MAX_RETRIES) {
+    try {
+      // forward any necessary headers (example: Authorization, Content-Type already set in axios client)
+      const res = await axiosClient.post('/ai/generate', payload, {
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      return normalize(res?.data ?? {});
+    } catch (err: any) {
+      attempt += 1;
+      // retry on network errors or 5xx server errors
+  const isNetwork = !!err?.request && !err?.response;
+  const respStatus = err?.response?.status;
+  const isServerError = respStatus && respStatus >= 500 && respStatus < 600;
+
+      if (attempt <= MAX_RETRIES && (isNetwork || isServerError)) {
+        const backoff = 500 * 2 ** (attempt - 1);
+        console.warn(`[AIApi] generateText retry #${attempt} after ${backoff}ms`, err?.message || err);
+  await new Promise<void>((resolve) => setTimeout(() => resolve(), backoff));
+        continue;
+      }
+
+      if (err?.response) {
+        const status = err.response.status;
+        const data = err.response.data;
+        throw new Error(`AI API Error ${status}: ${JSON.stringify(data)}`);
+      }
+      if (err?.request) {
+        throw new Error(`AI Network Error: ${err.message || 'no response received'}`);
+      }
+      throw new Error(err?.message ?? 'Unknown AI error');
     }
-    if (err?.request) {
-      throw new Error(
-        `Network Error: ${err.message || 'no response received'}`,
-      );
-    }
-    throw new Error(err?.message ?? 'Unknown error');
   }
+
+  // should not reach here
+  return { raw: null };
 }
 
 // export default will be attached at the bottom after all helpers are defined

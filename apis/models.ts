@@ -51,6 +51,7 @@ export type AIGenerateRequest = {
 
 export type AIGenerateResponse = {
   output?: string;
+  model?: string;
   raw?: any;
 };
 
