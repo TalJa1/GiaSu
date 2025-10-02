@@ -3,21 +3,35 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { API_BASE_URL } from '@env';
 
-// Resolve base URL and adapt localhost/127.0.0.1 to Android emulator host (10.0.2.2)
-const rawBaseUrl = (API_BASE_URL || '').trim();
-let ENV_BASE_URL = rawBaseUrl;
+// Helper default values
+const defaultProd = 'https://giasu.asfastapi.io.vn/api/v1';
+const defaultDevForHost = () =>
+  Platform.OS === 'android'
+    ? 'http://10.0.2.2:8000/api/v1'
+    : 'http://127.0.0.1:8000/api/v1';
 
+// Prefer @env value, then process.env (if available), then sensible default
+const envFromDotenv = typeof API_BASE_URL === 'string' && API_BASE_URL.trim() ? API_BASE_URL.trim() : '';
+const envFromProcess = ((globalThis as any)?.process?.env?.API_BASE_URL) || '';
+
+let rawBaseUrl = envFromDotenv || envFromProcess || (__DEV__ ? defaultDevForHost() : defaultProd);
+
+// normalize: remove trailing slash
+rawBaseUrl = rawBaseUrl.replace(/\/$/, '');
+
+// Resolve base URL and adapt localhost/127.0.0.1 to Android emulator host (10.0.2.2)
+let ENV_BASE_URL = rawBaseUrl;
 if (Platform.OS === 'android' && rawBaseUrl) {
-  // Replace common local hosts with emulator host so Android emulator reaches host machine
-  ENV_BASE_URL = rawBaseUrl
-    .replace('localhost', '10.0.2.2')
-    .replace('127.0.0.1', '10.0.2.2');
+  ENV_BASE_URL = rawBaseUrl.replace(/localhost|127\.0\.0\.1/gi, '10.0.2.2');
 }
 
 // Debug logging - show raw and resolved base URLs
-console.log('🌐 Raw API Base URL:', rawBaseUrl);
+console.log('🌐 API base from .env or process.env (raw):', envFromDotenv || envFromProcess || '(none)');
+console.log('🌐 Raw API Base URL (used before platform mapping):', rawBaseUrl);
 console.log('🌐 Resolved API Base URL (used by axios):', ENV_BASE_URL);
-console.log('🔧 Environment check - __DEV__:', __DEV__, 'Platform:', Platform.OS);
+if (!envFromDotenv && !envFromProcess) {
+  console.warn('[axios] No API_BASE_URL found in .env or process.env — using default:', ENV_BASE_URL);
+}
 
 
 // Create axios instance
