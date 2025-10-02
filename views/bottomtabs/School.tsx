@@ -14,6 +14,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AIApi from '../../apis/AIApi';
 import UniversityPreview from '../common/UniversityPreview';
 import MarkdownRenderer from '../../components/MarkdownRenderer';
+import { StatusBar } from 'react-native';
 
 const ICON_SIZE = 20;
 
@@ -179,15 +180,23 @@ const SchoolHeader: React.FC<SchoolHeaderProps> = ({
 
       <View style={styles.actionsRow}>
         <TouchableOpacity
-          style={styles.goBtn}
+          style={[
+            styles.analyzeBtn,
+            loading ? styles.analyzeBtnDisabled : undefined,
+          ]}
           onPress={onSearch}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           disabled={loading}
+          accessibilityRole="button"
+          accessibilityLabel={loading ? 'Analyzing' : 'Analyze'}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.goText}>Go</Text>
+            <>
+              <Icon name="chart-line" size={18} color="#fff" />
+              <Text style={styles.analyzeText}>Analyze</Text>
+            </>
           )}
         </TouchableOpacity>
       </View>
@@ -298,6 +307,7 @@ const School: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.primary.main} />
       <FlatList
         data={dataForList}
         keyExtractor={(i, idx) => `${i?.name ?? idx}`}
@@ -361,13 +371,24 @@ const styles = StyleSheet.create<any>({
   },
   input: { flex: 1, paddingVertical: 8, color: Colors.text.primary },
   actionsRow: { marginTop: 12, alignItems: 'flex-end' },
-  goBtn: {
+  analyzeBtn: {
     backgroundColor: Colors.primary.main,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
   },
-  goText: { color: '#fff', fontWeight: '700' },
+  analyzeBtnDisabled: {
+    opacity: 0.6,
+  },
+  analyzeText: { color: '#fff', fontWeight: '700', marginLeft: 8 },
   error: { color: Colors.status.error, marginTop: 12 },
   card: {
     backgroundColor: Colors.background.primary,
